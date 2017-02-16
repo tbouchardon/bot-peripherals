@@ -206,4 +206,83 @@ public class Screen extends Peripheral {
         BufferedImage biCapturedScreen = robot.createScreenCapture(new Rectangle(0, 0, i_SCREEN_WIDTH, i_SCREEN_HEIGHT));
         return checkColor(iX, iY, biCapturedScreen, iColor);
     }
+    
+    public ArrayList<ColorBlock> searchColorBlocks(int iRed, int iGreen, int iBlue, int iMinSize, int iMaxSize) throws AWTException {
+        
+        Robot         robot            = new Robot();
+        BufferedImage biCapturedScreen = robot.createScreenCapture(new Rectangle(0, 0, i_SCREEN_WIDTH, i_SCREEN_HEIGHT));
+        
+        ArrayList<ColorBlock> colorBlocks = new ArrayList<>();
+        int                   iCapturedRGB;
+        int                   r, g, b;
+        boolean               bFound;
+        System.out.println(iRed + " " + iGreen + " " + iBlue);
+        
+        for (int iX = 0; iX < i_SCREEN_WIDTH; iX++) {
+            for (int iY = 0; iY < i_SCREEN_HEIGHT; iY++) {
+                
+                if (!colorBlocks.isEmpty()) {
+                    for (ColorBlock colorBlock : colorBlocks) {
+                        if (iY >= colorBlock.yPosition && iY <= colorBlock.yPosition + colorBlock.ySize && iX >= colorBlock.xPosition && iX <= colorBlock.xPosition + colorBlock.xSize) {
+                            iY = colorBlock.yPosition + colorBlock.ySize;
+                        }
+                    }
+                }
+                
+                
+                ColorBlock colorBlock = new ColorBlock();
+                
+                iCapturedRGB = biCapturedScreen.getRGB(iX, iY);
+                b = (iCapturedRGB) & 0xFF;
+                g = (iCapturedRGB >> 8) & 0xFF;
+                r = (iCapturedRGB >> 16) & 0xFF;
+                
+                int xDelta = 0;
+                int yDelta = 0;
+                
+                if (r == iRed && g == iGreen && b == iBlue) {
+                    bFound = true;
+                    while (bFound) {
+                        iCapturedRGB = biCapturedScreen.getRGB(iX + ++xDelta, iY + yDelta);
+                        b = (iCapturedRGB) & 0xFF;
+                        g = (iCapturedRGB >> 8) & 0xFF;
+                        r = (iCapturedRGB >> 16) & 0xFF;
+                        if (!(r == iRed && g == iGreen && b == iBlue)) {
+                            colorBlock.ySize = yDelta;
+                            yDelta++;
+                            if (xDelta != 1) { colorBlock.xSize = xDelta; }
+                            else { bFound = false; }
+                            xDelta = 0;
+                        }
+                    }
+                    
+                    colorBlock.xPosition = iX;
+                    colorBlock.yPosition = iY;
+                    colorBlocks.add(colorBlock);
+                }
+            }
+        }
+        
+        if (!colorBlocks.isEmpty()) {
+            int iSize = colorBlocks.size();
+            for (int i = 0; i < iSize; i++) {
+                ColorBlock colorBlock = colorBlocks.get(i);
+                if (((colorBlock.xSize < iMinSize || colorBlock.ySize < iMinSize) && iMinSize != 0) || ((colorBlock.xSize > iMaxSize || colorBlock.ySize > iMaxSize) && iMaxSize != 0)) {
+                    colorBlocks.remove(colorBlock);
+                    i--;
+                    iSize--;
+                }
+            }
+        }
+        
+        return colorBlocks;
+    }
+    
+    public class ColorBlock {
+        
+        public int xPosition;
+        public int yPosition;
+        int xSize;
+        int ySize;
+    }
 }
