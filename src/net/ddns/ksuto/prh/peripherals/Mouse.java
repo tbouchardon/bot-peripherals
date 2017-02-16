@@ -1,6 +1,7 @@
 package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.TBoPeripheralRobotHelper;
+import net.ddns.ksuto.prh.properties.Constants;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -25,74 +26,74 @@ public class Mouse extends Peripheral {
         
         robot.mousePress(InputEvent.BUTTON3_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
     
     public void clickLeft() {
         
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
     
     public void DragTop2Bottom(int iDistance, int iButtonMask) throws AWTException {
         
         Robot robot = new Robot();
         robot.mouseMove(helper.getScreen().iX_START, helper.getScreen().iY_START);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
         robot.mousePress(iButtonMask);
-        robot.delay(constants.i_DELAY);
-        for (int iTB = helper.getScreen().iY_START; iTB < helper.getScreen().iY_START + iDistance; iTB += constants.i_DRAG_SPACE) {
+        robot.delay(Constants.i_DELAY);
+        for (int iTB = helper.getScreen().iY_START; iTB < helper.getScreen().iY_START + iDistance; iTB += Constants.i_DRAG_SPACE) {
             robot.mouseMove(helper.getScreen().iX_START, iTB);
-            robot.delay(constants.i_DRAG_DELAY);
+            robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
     }
     
     public void DragBottom2Top(int iDistance, int iButtonMask) throws AWTException {
         
         Robot robot = new Robot();
         robot.mouseMove(helper.getScreen().iX_START, helper.getScreen().iY_START);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
         robot.mousePress(iButtonMask);
-        robot.delay(constants.i_DELAY);
-        for (int iBT = helper.getScreen().iY_START; iBT > helper.getScreen().iY_START - iDistance; iBT -= constants.i_DRAG_SPACE) {
+        robot.delay(Constants.i_DELAY);
+        for (int iBT = helper.getScreen().iY_START; iBT > helper.getScreen().iY_START - iDistance; iBT -= Constants.i_DRAG_SPACE) {
             robot.mouseMove(helper.getScreen().i_SCREEN_WIDTH / 2, iBT);
-            robot.delay(constants.i_DRAG_DELAY);
+            robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
     }
     
     public void DragLeft2Right(int iDistance, int iButtonMask) throws AWTException {
         
         Robot robot = new Robot();
         robot.mouseMove(helper.getScreen().iX_START, helper.getScreen().iY_START);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
         robot.mousePress(iButtonMask);
-        robot.delay(constants.i_DELAY);
-        for (int iLR = helper.getScreen().iX_START; iLR < helper.getScreen().iX_START + iDistance; iLR += constants.i_DRAG_SPACE) {
+        robot.delay(Constants.i_DELAY);
+        for (int iLR = helper.getScreen().iX_START; iLR < helper.getScreen().iX_START + iDistance; iLR += Constants.i_DRAG_SPACE) {
             robot.mouseMove(iLR, helper.getScreen().iY_START);
-            robot.delay(constants.i_DRAG_DELAY);
+            robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
     }
     
     public void DragRight2Left(int iDistance, int iButtonMask) throws AWTException {
         
         Robot robot = new Robot();
         robot.mouseMove(helper.getScreen().iX_START, helper.getScreen().iY_START);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
         robot.mousePress(iButtonMask);
-        robot.delay(constants.i_DELAY);
-        for (int iLR = helper.getScreen().iX_START; iLR > helper.getScreen().iX_START - iDistance; iLR -= constants.i_DRAG_SPACE) {
+        robot.delay(Constants.i_DELAY);
+        for (int iLR = helper.getScreen().iX_START; iLR > helper.getScreen().iX_START - iDistance; iLR -= Constants.i_DRAG_SPACE) {
             robot.mouseMove(iLR, helper.getScreen().iY_START);
-            robot.delay(constants.i_DRAG_DELAY);
+            robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
-        robot.delay(constants.i_DELAY);
+        robot.delay(Constants.i_DELAY);
     }
     
     public void Drag(int iX_start, int iX_end, int iY_start, int iY_end, int iButtonMask) throws AWTException {
@@ -109,7 +110,7 @@ public class Mouse extends Peripheral {
             if (iY_start > iY_end) { iY_start--; }
             robot.mouseMove(iX_start, iY_start);
             System.out.println(iX_start + " " + iY_start);
-            robot.delay(constants.i_DRAG_DELAY);
+            robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
         robot.delay(1000);
@@ -125,7 +126,7 @@ public class Mouse extends Peripheral {
         helper.mousePosition.updateMousePosition();
         robot.mousePress(InputEvent.BUTTON1_MASK);
         robot.mouseRelease(InputEvent.BUTTON1_MASK);
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
     
     public boolean clickThing(String[] sImage) {

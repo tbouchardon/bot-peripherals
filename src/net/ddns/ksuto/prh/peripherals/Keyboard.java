@@ -1,6 +1,7 @@
 package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.TBoPeripheralRobotHelper;
+import net.ddns.ksuto.prh.properties.Constants;
 
 import java.awt.event.KeyEvent;
 
@@ -35,7 +36,7 @@ public class Keyboard extends Peripheral {
         
         robot.keyPress(KeyEvent.VK_ENTER);
         robot.keyRelease(KeyEvent.VK_ENTER);
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
     
     public void selectAll() {
@@ -47,7 +48,7 @@ public class Keyboard extends Peripheral {
         robot.keyPress(KeyEvent.VK_A);
         robot.keyRelease(KeyEvent.VK_A);
         robot.keyRelease(KeyEvent.VK_CONTROL);
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
     
     public void typeString(String strText) {
@@ -410,10 +411,16 @@ public class Keyboard extends Peripheral {
                     robot.keyRelease(KeyEvent.VK_SHIFT);
                     break;
                 case '/':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_COLON);
-                    robot.keyRelease(KeyEvent.VK_COLON);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
+                    robot.keyPress(KeyEvent.VK_ALT);
+                    robot.keyPress(KeyEvent.VK_NUMPAD0);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
+                    robot.keyPress(KeyEvent.VK_NUMPAD0);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
+                    robot.keyPress(KeyEvent.VK_NUMPAD4);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD4);
+                    robot.keyPress(KeyEvent.VK_NUMPAD7);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD7);
+                    robot.keyRelease(KeyEvent.VK_ALT);
                     break;
                 case ' ':
                     robot.keyPress(KeyEvent.VK_SPACE);
@@ -424,16 +431,20 @@ public class Keyboard extends Peripheral {
                     robot.keyRelease(KeyEvent.VK_EXCLAMATION_MARK);
                     break;
                 case '@':
-                    robot.keyPress(KeyEvent.VK_CONTROL);
                     robot.keyPress(KeyEvent.VK_ALT);
-                    robot.keyPress(KeyEvent.VK_0);
-                    robot.keyRelease(KeyEvent.VK_0);
-                    robot.keyRelease(KeyEvent.VK_CONTROL);
+                    robot.keyPress(KeyEvent.VK_NUMPAD0);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
+                    robot.keyPress(KeyEvent.VK_NUMPAD0);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
+                    robot.keyPress(KeyEvent.VK_NUMPAD6);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD6);
+                    robot.keyPress(KeyEvent.VK_NUMPAD4);
+                    robot.keyRelease(KeyEvent.VK_NUMPAD4);
                     robot.keyRelease(KeyEvent.VK_ALT);
                     break;
             }
-            delay(constants.i_TYPING_DELAY);
+            delay(Constants.i_TYPING_DELAY);
         }
-        delay(constants.i_DELAY);
+        delay(Constants.i_DELAY);
     }
 }

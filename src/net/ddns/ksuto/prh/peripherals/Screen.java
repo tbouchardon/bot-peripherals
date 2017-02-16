@@ -1,6 +1,7 @@
 package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.TBoPeripheralRobotHelper;
+import net.ddns.ksuto.prh.properties.Constants;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -167,7 +168,7 @@ public class Screen extends Peripheral {
             }
             
             //			System.out.print(".");
-            delay(constants.i_SCAN_DELAY);
+            delay(Constants.i_SCAN_DELAY);
         }
         
         System.out.println("         Found !");
