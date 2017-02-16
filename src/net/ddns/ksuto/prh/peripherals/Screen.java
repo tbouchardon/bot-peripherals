@@ -17,10 +17,10 @@ import javax.imageio.ImageIO;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Screen extends Peripheral {
     
-    public final int i_SCREEN_WIDTH  = (int) dim_D.getWidth();
-    public final int i_SCREEN_HEIGHT = (int) dim_D.getHeight();
-    public final int iX_START        = i_SCREEN_WIDTH / 2, iY_START = i_SCREEN_HEIGHT / 2 - 20;
-    private final Dimension dim_D = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    private final Dimension dim_D           = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    public final  int       i_SCREEN_WIDTH  = (int) dim_D.getWidth();
+    public final  int       i_SCREEN_HEIGHT = (int) dim_D.getHeight();
+    public final  int       iX_START        = i_SCREEN_WIDTH / 2, iY_START = i_SCREEN_HEIGHT / 2 - 20;
     private TBoPeripheralRobotHelper helper;
     
     public Screen(TBoPeripheralRobotHelper TBoPeripheralRobotHelper) {
