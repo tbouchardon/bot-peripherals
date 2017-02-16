@@ -39,8 +39,8 @@ public class Screen extends Peripheral {
     public ArrayList<int[]> scanFor(String[] strImages, double xMin, double xMax, double yMin, double yMax) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : scanFor(String[] strImages, " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
+    
+        System.out.println("Peripheral > Method : scanFor(String[] strImages, " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
         
         //		logger.log("test");
         
@@ -117,8 +117,8 @@ public class Screen extends Peripheral {
                         result = false;
                     }
                 }
-                
-                System.out.println(" - > " + (System.currentTimeMillis() - time) + "ms");
+    
+                System.out.println("Peripheral >  - > " + (System.currentTimeMillis() - time) + "ms");
             }
     
             if (!alCoords.isEmpty()) { return alCoords; }
@@ -137,8 +137,8 @@ public class Screen extends Peripheral {
     public boolean waitFor(String[] strImages, int seconds) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : waitFor(strImages[], " + seconds + ")");
+    
+        System.out.println("Peripheral > Method : waitFor(strImages[], " + seconds + ")");
         
         return waitFor(strImages, seconds, 0, 1, 0, 1);
     }
@@ -146,21 +146,21 @@ public class Screen extends Peripheral {
     public boolean waitFor(String[] strImages, int seconds, double xMin, double xMax, double yMin, double yMax) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : waitFor(String[] strImages, " + seconds + ", " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
+    
+        System.out.println("Peripheral > Method : waitFor(String[] strImages, " + seconds + ", " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
         
         double startTime = System.currentTimeMillis();
-        
-        System.out.println("         Waiting for strImages[]");
+    
+        System.out.println("Peripheral >          Waiting for strImages[]");
         
         while (scanFor(strImages, xMin, xMax, yMin, yMax).isEmpty()) {
             if (seconds != -1 && (System.currentTimeMillis() - startTime) > (seconds * 1000)) {
-                System.out.println("         /!\\ Not Found /!\\");
+                System.out.println("Peripheral >          /!\\ Not Found /!\\");
                 return false;
             }
             
             if (System.currentTimeMillis() - startTime > 10000) {
-                System.out.println("         Time > 10s, looking for everywhere");
+                System.out.println("Peripheral >          Time > 10s, looking for everywhere");
                 xMin = 0;
                 xMax = 1;
                 yMin = 0;
@@ -170,8 +170,8 @@ public class Screen extends Peripheral {
             //			System.out.print(".");
             delay(Constants.i_SCAN_DELAY);
         }
-        
-        System.out.println("         Found !");
+    
+        System.out.println("Peripheral >          Found !");
         
         return true;
     }
@@ -179,8 +179,8 @@ public class Screen extends Peripheral {
     public boolean waitFor(String[] strImages) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : waitFor(strImages[])");
+    
+        System.out.println("Peripheral > Method : waitFor(strImages[])");
         
         return waitFor(strImages, -1, 0, 1, 0, 1);
     }
@@ -189,8 +189,21 @@ public class Screen extends Peripheral {
         
         helper.waitIfUserActive();
         
-        System.out.println("Method : waitFor(String[] strImages, " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
+        System.out.println("Peripheral > Method : waitFor(String[] strImages, " + xMin + ", " + xMax + ", " + yMin + ", " + yMax + ")");
         
         return waitFor(strImages, -1, xMin, xMax, yMin, yMax);
+    }
+    
+    private boolean checkColor(int iX, int iY, BufferedImage biCapturedScreen, int iColor) {
+        
+        int iCapturedRGB = biCapturedScreen.getRGB(iX, iY);
+        // System.out.println("Peripheral > (" + iX + ", " + iY + ") Searching : " + iColor + ", found : " + iCapturedRGB + ".");
+        return (iColor == iCapturedRGB);
+    }
+    
+    private boolean checkColor(int iX, int iY, int iColor) {
+        
+        BufferedImage biCapturedScreen = robot.createScreenCapture(new Rectangle(0, 0, i_SCREEN_WIDTH, i_SCREEN_HEIGHT));
+        return checkColor(iX, iY, biCapturedScreen, iColor);
     }
 }

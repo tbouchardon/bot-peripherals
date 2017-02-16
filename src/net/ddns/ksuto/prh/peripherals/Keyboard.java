@@ -49,8 +49,8 @@ public class Keyboard extends Peripheral {
     }
     
     public void selectAll() {
-        
-        System.out.println("Method : selectAll()");
+    
+        System.out.println("Peripheral > Method : selectAll()");
         helper.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_CONTROL);
@@ -63,8 +63,8 @@ public class Keyboard extends Peripheral {
     public void typeString(String strText) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : typeString(" + strText + ")");
+    
+        System.out.println("Peripheral > Method : typeString(" + strText + ")");
         
         for (char cLetter : strText.toCharArray()) {
             

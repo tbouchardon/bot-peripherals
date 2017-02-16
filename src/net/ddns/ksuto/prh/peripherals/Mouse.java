@@ -119,8 +119,8 @@ public class Mouse extends Peripheral {
     public void click(int x, int y) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : click(" + x + ", " + y + ")");
+    
+        System.out.println("Peripheral > Method : click(" + x + ", " + y + ")");
         
         robot.mouseMove(x, y);
         helper.mousePosition.updateMousePosition();
@@ -132,8 +132,8 @@ public class Mouse extends Peripheral {
     public boolean clickThing(String[] sImage) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : clickThing(String[] sImage)");
+    
+        System.out.println("Peripheral > Method : clickThing(String[] sImage)");
         
         return clickThing(sImage, 0, 0);
     }
@@ -141,16 +141,16 @@ public class Mouse extends Peripheral {
     public boolean clickThing(String[] sImage, int xOffset, int yOffset) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Method : clickThing(sImage, " + xOffset + ", " + yOffset + ")");
-        
-        System.out.println("         Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
+    
+        System.out.println("Peripheral > Method : clickThing(sImage, " + xOffset + ", " + yOffset + ")");
+    
+        System.out.println("Peripheral >          Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
         
         ArrayList<int[]> alFound;
         
         alFound = helper.getScreen().scanFor(sImage);
         if (!alFound.isEmpty()) {
-            System.out.println("         " + sImage[0] + " Found");
+            System.out.println("Peripheral >          " + sImage[0] + " Found");
             for (int[] aiCoords : alFound) {
                 click(aiCoords[0] + 3 + xOffset, aiCoords[1] + 3 + yOffset);
             }

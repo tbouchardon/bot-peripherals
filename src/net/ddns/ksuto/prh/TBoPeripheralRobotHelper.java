@@ -39,8 +39,8 @@ public class TBoPeripheralRobotHelper {
     public void waitIfUserActive() {
         
         if (!waitIfUserActive) { return; }
-        
-        System.out.println("Method : waitIfUserActive()");
+    
+        System.out.println("Peripheral > Method : waitIfUserActive()");
         
         while (mousePosition.hasMoved()) {
             mousePosition.updateMousePosition();
