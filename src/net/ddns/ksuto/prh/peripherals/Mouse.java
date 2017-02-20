@@ -116,17 +116,26 @@ public class Mouse extends Peripheral {
         robot.delay(1000);
     }
     
-    public void click(int x, int y) {
+    public void clickLeft(int x, int y) {
         
         helper.waitIfUserActive();
-    
-        System.out.println("Peripheral > Method : click(" + x + ", " + y + ")");
+        
+        System.out.println("Peripheral > Method : clickLeft(" + x + ", " + y + ")");
         
         robot.mouseMove(x, y);
         helper.mousePosition.updateMousePosition();
-        robot.mousePress(InputEvent.BUTTON1_MASK);
-        robot.mouseRelease(InputEvent.BUTTON1_MASK);
-        delay(Constants.i_DELAY);
+        clickLeft();
+    }
+    
+    public void clickRight(int x, int y) {
+        
+        helper.waitIfUserActive();
+        
+        System.out.println("Peripheral > Method : clickRight(" + x + ", " + y + ")");
+        
+        robot.mouseMove(x, y);
+        helper.mousePosition.updateMousePosition();
+        clickRight();
     }
     
     public boolean clickThing(String[] sImage) {
@@ -152,7 +161,7 @@ public class Mouse extends Peripheral {
         if (!alFound.isEmpty()) {
             System.out.println("Peripheral >          " + sImage[0] + " Found");
             for (int[] aiCoords : alFound) {
-                click(aiCoords[0] + 3 + xOffset, aiCoords[1] + 3 + yOffset);
+                clickLeft(aiCoords[0] + 3 + xOffset, aiCoords[1] + 3 + yOffset);
             }
             return true;
         }
