@@ -2,6 +2,7 @@ package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.TBoPeripheralRobotHelper;
 import net.ddns.ksuto.prh.properties.Constants;
+import net.ddns.ksuto.prh.tools.Debug;
 
 import java.awt.event.KeyEvent;
 
@@ -50,7 +51,7 @@ public class Keyboard extends Peripheral {
     
     public void selectAll() {
     
-        System.out.println("Peripheral > Method : selectAll()");
+        Debug.sout();
         helper.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_CONTROL);
@@ -64,7 +65,7 @@ public class Keyboard extends Peripheral {
         
         helper.waitIfUserActive();
     
-        System.out.println("Peripheral > Method : typeString(" + strText + ")");
+        Debug.sout("typeString(" + strText + ")");
         
         for (char cLetter : strText.toCharArray()) {
             

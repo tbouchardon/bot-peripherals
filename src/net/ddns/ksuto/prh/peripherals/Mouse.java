@@ -2,6 +2,7 @@ package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.TBoPeripheralRobotHelper;
 import net.ddns.ksuto.prh.properties.Constants;
+import net.ddns.ksuto.prh.tools.Debug;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -109,7 +110,7 @@ public class Mouse extends Peripheral {
             if (iY_start < iY_end) { iY_start++; }
             if (iY_start > iY_end) { iY_start--; }
             robot.mouseMove(iX_start, iY_start);
-            System.out.println(iX_start + " " + iY_start);
+            Debug.sout(iX_start + " " + iY_start);
             robot.delay(Constants.i_DRAG_DELAY);
         }
         robot.mouseRelease(iButtonMask);
@@ -119,8 +120,8 @@ public class Mouse extends Peripheral {
     public void clickLeft(int x, int y) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Peripheral > Method : clickLeft(" + x + ", " + y + ")");
+    
+        Debug.sout(x + ", " + y + ")");
         
         robot.mouseMove(x, y);
         helper.mousePosition.updateMousePosition();
@@ -130,8 +131,8 @@ public class Mouse extends Peripheral {
     public void clickRight(int x, int y) {
         
         helper.waitIfUserActive();
-        
-        System.out.println("Peripheral > Method : clickRight(" + x + ", " + y + ")");
+    
+        Debug.sout(x + ", " + y + ")");
         
         robot.mouseMove(x, y);
         helper.mousePosition.updateMousePosition();
@@ -142,7 +143,7 @@ public class Mouse extends Peripheral {
         
         helper.waitIfUserActive();
     
-        System.out.println("Peripheral > Method : clickThing(String[] sImage)");
+        Debug.sout("String[] sImage)");
         
         return clickThing(sImage, 0, 0);
     }
@@ -151,15 +152,15 @@ public class Mouse extends Peripheral {
         
         helper.waitIfUserActive();
     
-        System.out.println("Peripheral > Method : clickThing(sImage, " + xOffset + ", " + yOffset + ")");
+        Debug.sout("sImage, " + xOffset + ", " + yOffset + ")");
     
-        System.out.println("Peripheral >          Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
+        Debug.sout("Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
         
         ArrayList<int[]> alFound;
         
         alFound = helper.getScreen().scanFor(sImage);
         if (!alFound.isEmpty()) {
-            System.out.println("Peripheral >          " + sImage[0] + " Found");
+            Debug.sout(sImage[0] + " Found");
             for (int[] aiCoords : alFound) {
                 clickLeft(aiCoords[0] + 3 + xOffset, aiCoords[1] + 3 + yOffset);
             }

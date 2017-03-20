@@ -5,6 +5,7 @@ import net.ddns.ksuto.prh.peripherals.Mouse;
 import net.ddns.ksuto.prh.peripherals.MousePosition;
 import net.ddns.ksuto.prh.peripherals.Screen;
 import net.ddns.ksuto.prh.properties.Constants;
+import net.ddns.ksuto.prh.tools.Debug;
 
 import java.awt.*;
 
@@ -40,7 +41,7 @@ public class TBoPeripheralRobotHelper {
         
         if (!waitIfUserActive) { return; }
     
-        System.out.println("Peripheral > Method : waitIfUserActive()");
+        Debug.sout();
         
         while (mousePosition.hasMoved()) {
             mousePosition.updateMousePosition();
