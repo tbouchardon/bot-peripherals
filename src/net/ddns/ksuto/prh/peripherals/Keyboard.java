@@ -40,6 +40,27 @@ public class Keyboard extends Peripheral {
         delay(Constants.i_DELAY);
     }
     
+    public void pressKey(int keyEvent) {
+        
+        pressKey(keyEvent, false, false, false);
+    }
+    
+    public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift) {
+        
+        if (alt) { robot.keyPress(KeyEvent.VK_ALT); }
+        if (ctrl) { robot.keyPress(KeyEvent.VK_CONTROL); }
+        if (shift) { robot.keyPress(KeyEvent.VK_SHIFT); }
+        
+        robot.delay(Constants.i_DELAY);
+        robot.keyPress(keyEvent);
+        robot.keyRelease(keyEvent);
+        robot.delay(Constants.i_DELAY);
+        
+        if (shift) { robot.keyRelease(KeyEvent.VK_SHIFT); }
+        if (ctrl) { robot.keyRelease(KeyEvent.VK_CONTROL); }
+        if (alt) { robot.keyRelease(KeyEvent.VK_ALT); }
+    }
+    
     public void escape() {
         
         helper.waitIfUserActive();
