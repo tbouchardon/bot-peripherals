@@ -4,22 +4,56 @@
         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>net.ddns.ksuto</groupId>
     <artifactId>peripheral-robot-helper</artifactId>
+    <packaging>jar</packaging>
+    <name>Peripheral Robot Helper</name>
     <version>1.0-RELEASE</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.2.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.1.4</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/commons-dbutils/commons-dbutils -->
+        <dependency>
+            <groupId>commons-dbutils</groupId>
+            <artifactId>commons-dbutils</artifactId>
+            <version>1.7</version>
+        </dependency>
+
+    </dependencies>
+
     <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
         <plugins>
+
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.6.1</version>
                 <configuration>
-                    <compilerArgument>-Xlint:all</compilerArgument>
-                    <showWarnings>true</showWarnings>
+                    <!--<compilerArgument>-Xlint:all</compilerArgument>-->
+                    <!--<showWarnings>true</showWarnings>-->
                     <showDeprecation>true</showDeprecation>
                     <source>1.8</source>
                     <target>1.8</target>
@@ -27,16 +61,5 @@
             </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>google-drive-repository</id>
-            <url>file://${user.home}/google drive/maven-repository/mvn-releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>google-drive-snapshot</id>
-            <url>file://${user.home}/google drive/maven-repository/mvn-snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
 
 </project>
