@@ -5,9 +5,10 @@ package net.ddns.ksuto.prh.properties;
  */
 public class Constants {
     
-    public static int i_DELAY        = 100;
-    public static int i_SCAN_DELAY   = 100;
-    public static int i_TYPING_DELAY = 50;
-    public static int i_DRAG_SPACE   = 1;
-    public static int i_DRAG_DELAY   = 20;
+    public static final int     i_DELAY        = 100;
+    public static final int     i_SCAN_DELAY   = 100;
+    public static final int     i_TYPING_DELAY = 50;
+    public static final int     i_DRAG_SPACE   = 5;
+    public static final int     i_DRAG_DELAY   = 10;
+    public static final boolean DEBUG          = false;
 }

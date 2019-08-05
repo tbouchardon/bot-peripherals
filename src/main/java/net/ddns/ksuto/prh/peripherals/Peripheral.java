@@ -1,7 +1,5 @@
 package net.ddns.ksuto.prh.peripherals;
 
-import net.ddns.ksuto.prh.properties.Constants;
-
 import java.awt.*;
 
 /**
@@ -9,8 +7,9 @@ import java.awt.*;
  */
 class Peripheral {
     
-    Constants constants;
-    Robot     robot;
+    Robot robot = new Robot();
+    
+    Peripheral() throws AWTException {}
     
     void delay(int ms) {
         

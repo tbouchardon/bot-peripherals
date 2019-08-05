@@ -1,0 +1,30 @@
+package net.ddns.ksuto.prh.entities;
+
+import lombok.Data;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
+
+import javax.imageio.ImageIO;
+
+@Data
+public class Picture extends LocatedObject {
+    
+    private Object        object;
+    private BufferedImage referenceImage;
+    
+    public Picture(String path) {
+        
+        try {
+            URL url = this.getClass().getResource(path);
+            this.referenceImage = ImageIO.read(url);
+            this.setHeight(getReferenceImage().getHeight());
+            this.setWidth(getReferenceImage().getWidth());
+        }
+        catch (IOException e) {
+            // TODO : Catcher cette exception correctement !
+            e.printStackTrace();
+        }
+    }
+}

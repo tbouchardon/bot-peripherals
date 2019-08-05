@@ -1,5 +1,7 @@
 package net.ddns.ksuto.prh.tools;
 
+import net.ddns.ksuto.prh.properties.Constants;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -12,6 +14,8 @@ import java.util.regex.Pattern;
 public class Debug {
     
     public static void sout(String print) {
+    
+        if (!Constants.DEBUG) { return; }
         
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         
