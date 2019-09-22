@@ -353,24 +353,25 @@ yxLoop:
         public SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
         public SearchHistory         searchHistory;
     
-        public  boolean        optimizing          = false;
-        public  boolean        learning            = false;
-        public  Integer        precision           = 0;
-        public  Integer        expectedResults     = null;
-        public  double         allowedErrorRate    = 0;
-        public  int            exclusiveZone       = 0;
-        public  Robot          robot               = new Robot();
-        public  int            clickDelay          = Constants.i_DELAY;
-        public  int            searchDelay         = 0;
-        public  boolean        isTracking          = false;
-        public  List<T>        objects             = new ArrayList<>();
-        public  int            maximumMovement     = 20;
-        public  Zone           searchZone          = Zone.ALL;
+        public  boolean        optimizing                 = false;
+        public  boolean        learning                   = false;
+        public  Integer        precision                  = 0;
+        public  Integer        expectedResults            = null;
+        public  double         allowedErrorRate           = 0;
+        public  int            exclusiveZone              = 0;
+        public  Robot          robot                      = new Robot();
+        public  int            clickDelay                 = Constants.i_DELAY;
+        public  int            searchDelay                = 0;
+        public  boolean        isTracking                 = false;
+        public  List<T>        objects                    = new ArrayList<>();
+        public  int            maximumMovement            = 20;
+        public  Zone           searchZone                 = Zone.ALL;
         private ShowObjects<T> showObjects;
         private S              seeker;
-        private boolean        showTargets         = false;
-        private boolean        debug               = false;
-        private boolean        clickUntilDisappear = false;
+        private boolean        showTargets                = false;
+        private boolean        debug                      = false;
+        private boolean        clickUntilDisappear        = false;
+        private int            iterationsBeforeOptimizing = 100;
         
         private Seeker() throws AWTException {
     
@@ -570,7 +571,7 @@ yxLoop:
         
                             searchHistory.setIterations(searchHistoryDatabase.increaseIterations(searchHistory.getHash()));
         
-                            if (searchHistory.getIterations() >= 100) {
+                            if (searchHistory.getIterations() >= iterationsBeforeOptimizing) {
                                 optimiseSearchArea();
                             }
                         }
@@ -603,8 +604,14 @@ yxLoop:
     
         public S optimize() {
         
+            return optimize(100);
+        }
+    
+        public S optimize(int iterationsBeforeOptimizing) {
+            
             this.optimizing = true;
-        
+            this.iterationsBeforeOptimizing = iterationsBeforeOptimizing;
+            
             String hash = objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
         
             this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
@@ -756,8 +763,8 @@ yxLoop:
                 if (object.getHeight() > maximums[1]) { maximums[1] = object.getHeight() + 1; }
             });
         
-            SearchHistory.Area area = new SearchHistory.Area(x1, x2 + maximums[0], y1, y2 + maximums[1]);
-        
+            SearchHistory.Area area = new SearchHistory.Area(x1 > 6 ? x1 - 5 : x1, x2 + maximums[0] + 5, y1 > 6 ? y1 - 5 : y1, y2 + maximums[1] + 5);
+            
             searchHistoryDatabase.updateOptimisedSearchArea(area, searchHistory.getHash());
             searchHistory.setOptimisedSearchArea(area);
         
