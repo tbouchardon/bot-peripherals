@@ -373,14 +373,14 @@ yxLoop:
         private boolean        clickUntilDisappear = false;
         
         private Seeker() throws AWTException {
-            
-            if (Constants.DEBUG) { showObjects = new ShowObjects<>(searchZone); }
+    
+            //            if (Constants.DEBUG) { showObjects = new ShowObjects<>(searchZone); }
         }
         
         public S debug() {
             
             this.debug = true;
-            showObjects = new ShowObjects<>(searchZone);
+            showObjects = new ShowObjects<>(searchZone, objects.stream().map(t -> t.getHash()).collect(Collectors.joining(", ")));
             return (S) this;
         }
         
@@ -484,6 +484,8 @@ yxLoop:
                 }
             }
             while (clickUntilDisappear && clearResults().search().hasAnyResults());
+    
+            clean();
             
             return found;
         }
@@ -506,8 +508,15 @@ yxLoop:
             }
             System.out.println(" ");
     
-            showObjects.dispose();
+            clean();
             
+            return (S) this;
+        }
+    
+        public S clean() {
+        
+            if (showObjects != null) { showObjects.clean(); }
+        
             return (S) this;
         }
         
@@ -733,7 +742,7 @@ yxLoop:
         
             int x1 = Integer.MAX_VALUE, x2 = 0, y1 = Integer.MAX_VALUE, y2 = 0;
             for (SearchHistory.Position position : locatedObject.getPositions()) {
-            
+    
                 if (position.getPosition_x() < x1) { x1 = position.getPosition_x(); }
                 if (position.getPosition_x() > x2) { x2 = position.getPosition_x(); }
                 if (position.getPosition_y() < y1) { y1 = position.getPosition_y(); }
@@ -859,13 +868,15 @@ yxLoop:
         public S setSearchZone(Zone zone) {
             
             this.searchZone = zone;
+    
+            //            if (debug) { showObjects = new ShowObjects<>(searchZone); }
             
             return (S) this;
         }
         
         public S setShowTargets(boolean showTargets) {
-            
-            showObjects = new ShowObjects<>(searchZone);
+    
+            showObjects = new ShowObjects<>(searchZone, objects.stream().map(t -> t.getHash()).collect(Collectors.joining(", ")));
             
             this.showTargets = showTargets;
             

@@ -23,8 +23,8 @@ public abstract class AbstractDatabase {
     }
     
     public <T> List<T> queryListWithRunner(String query, Class<T> type) {
-        
-        System.out.println("Java JDBC PostgreSQL Connexion Test");
+    
+        //        System.out.println("Java JDBC PostgreSQL Connexion Test");
         
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/prh", "postgres", "postgres")) {
     
@@ -35,7 +35,7 @@ public abstract class AbstractDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            System.out.println("Connection failure.");
+            System.out.println("Query failure.");
             e.printStackTrace();
         }
         
@@ -43,12 +43,12 @@ public abstract class AbstractDatabase {
     }
     
     public ResultSet queryWithStatement(String query) {
-        
-        System.out.println("Java JDBC PostgreSQL Connexion Test");
+    
+        //        System.out.println("Java JDBC PostgreSQL Connexion Test");
         
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/prh", "postgres", "postgres")) {
-            
-            System.out.println("Connected to PostgreSQL database!");
+    
+            //            System.out.println("Connected to PostgreSQL database!");
             
             Statement statement = connection.createStatement();
             //            System.out.println("Reading objects records...");
@@ -63,7 +63,7 @@ public abstract class AbstractDatabase {
             return resultSet;
         }
         catch (SQLException e) {
-            System.out.println("Connection failure.");
+            System.out.println("Query failure.");
             e.printStackTrace();
         }
         

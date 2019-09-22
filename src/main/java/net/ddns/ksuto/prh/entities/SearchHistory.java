@@ -18,6 +18,10 @@ public class SearchHistory {
     private List<Position>  positions        = new ArrayList<>();
     private List<Parameter> searchParameters = new ArrayList<>();
     
+    public SearchHistory() {
+    
+    }
+    
     public SearchHistory(String hash) {
         
         this.id = new Random().nextLong();

@@ -21,14 +21,16 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
     private       Color       color          = Color.getHSBColor((float) Math.random(), 1f, 1f);
     private       List<T>     locatedObjects = new ArrayList<>();
     private       Screen.Zone zone;
+    private       String      title          = "";
     
     public ShowObjects() {
         
         init(Screen.Zone.ALL);
     }
     
-    public ShowObjects(Screen.Zone zone) {
+    public ShowObjects(Screen.Zone zone, String title) {
         
+        this.title = title;
         init(zone);
     }
     
@@ -52,10 +54,10 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
         
         List<LocatedObject> locatedObjectlist = new ArrayList<>();
         LocatedObject locatedObject = new LocatedObject() {
-        
+    
             @Override
             public String getHash() {
-            
+        
                 return "null";
             }
         };
@@ -77,6 +79,12 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
             Robot robot = new Robot();
             robot.delay(25);
         }
+    }
+    
+    public void clean() {
+        
+        paintPane.clear();
+        dispose();
     }
     
     private void init(Screen.Zone zone) {
@@ -127,6 +135,10 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
             g2d.setColor(Color.MAGENTA);
             g2d.setStroke(new BasicStroke(4f));
             g2d.drawRect(zone.getXMin(), zone.getYMin(), zone.getWidth(), zone.getHeight());
+    
+            g2d.drawString(title,
+                           zone.getXMin() + 5,
+                           zone.getYMin() - 20 < 0 ? zone.getYMin() + 10 : zone.getYMin() - 10);
             
             int grow = 4;
             
@@ -169,10 +181,10 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
             
             return new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
-    }
     
-    public void exit() {
+        public void clear() {
         
-        dispose();
+            dispose();
+        }
     }
 }

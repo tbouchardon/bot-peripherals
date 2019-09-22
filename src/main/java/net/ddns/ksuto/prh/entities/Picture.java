@@ -15,9 +15,11 @@ public class Picture extends LocatedObject {
     
     private Object        object;
     private BufferedImage referenceImage;
+    private String        path;
     
     public Picture(String path) {
-        
+    
+        this.path = path;
         try {
             URL url = this.getClass().getResource(path);
             this.referenceImage = ImageIO.read(url);
@@ -32,7 +34,7 @@ public class Picture extends LocatedObject {
     
     @Override
     public String getHash() {
-        
-        return String.valueOf(hashCode());
+    
+        return path.replaceAll(".*/", "");
     }
 }

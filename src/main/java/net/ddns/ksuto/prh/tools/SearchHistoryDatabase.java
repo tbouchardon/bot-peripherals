@@ -10,6 +10,15 @@ import java.util.List;
 
 public class SearchHistoryDatabase extends AbstractDatabase {
     
+    public static void main(String[] args) {
+        
+        SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
+        
+        SearchHistory searchHistory = searchHistoryDatabase.selectSearchHistory("stage_clear.png");
+        
+        System.out.println(searchHistory);
+    }
+    
     public SearchHistory createSearchHistory(String hash) {
         
         SearchHistory searchHistory = new SearchHistory(hash);
