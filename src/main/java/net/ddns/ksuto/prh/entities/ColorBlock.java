@@ -1,8 +1,10 @@
 package net.ddns.ksuto.prh.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class ColorBlock extends LocatedObject {
     
     private int size         = 0;
@@ -30,5 +32,11 @@ public class ColorBlock extends LocatedObject {
         this.red = red;
         this.green = green;
         this.blue = blue;
+    }
+    
+    @Override
+    public String getHash() {
+        
+        return String.valueOf(hashCode());
     }
 }

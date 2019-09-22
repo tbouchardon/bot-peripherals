@@ -3,9 +3,12 @@ package net.ddns.ksuto.prh.peripherals;
 import lombok.Data;
 import net.ddns.ksuto.prh.entities.ColorBlock;
 import net.ddns.ksuto.prh.entities.LocatedObject;
+import net.ddns.ksuto.prh.entities.Parameter;
 import net.ddns.ksuto.prh.entities.Picture;
 import net.ddns.ksuto.prh.entities.Position;
+import net.ddns.ksuto.prh.entities.SearchHistory;
 import net.ddns.ksuto.prh.properties.Constants;
+import net.ddns.ksuto.prh.tools.SearchHistoryDatabase;
 import net.ddns.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -41,7 +45,7 @@ public class Screen extends Peripheral {
         ShowObjects<Picture> showObjects   = new ShowObjects<>();
         PictureSearch        pictureSearch = new PictureSearch();
         int                  precision     = 0;
-        pictureSearch.addPictureWithUrl("test.png")
+        pictureSearch.addPictureWithUrl("/test.png")
                 .setPrecision(precision)
                 .setExclusiveZone(5);
         
@@ -53,106 +57,9 @@ public class Screen extends Peripheral {
         }
     }
     
-    public void pictureHelper(String url, int numberOfMatches) throws AWTException {
-        
-        pictureHelper(url, numberOfMatches, new Zone());
-    }
-    
-    public void pictureHelper(String url, int numberOfMatches, Zone searchZone) throws AWTException {
-        
-        for (int countDown = 5; countDown >= 0; countDown--) {
-            System.out.println("countDown = " + countDown);
-            robot.delay(1000);
-        }
-        
-        PictureSearch pictureSearch = new PictureSearch()
-                                              .addPictureWithUrl(url)
-                                              .setSearchZone(searchZone)
-                                              .setShowTargets(true)
-                                              .setTracking(true)
-                                              .debug();
-        
-        findHelperMatches(numberOfMatches, pictureSearch);
-    }
-    
-    public void colorHelper(int r, int g, int b, int minBlockSize, int numberOfMatches) throws AWTException {
-        
-        colorHelper(r, g, b, minBlockSize, numberOfMatches, new Zone());
-    }
-    
-    public void colorHelper(int r, int g, int b, int minBlockSize, int numberOfMatches, Zone searchZone) throws AWTException {
-        
-        for (int countDown = 5; countDown >= 0; countDown--) {
-            System.out.println("countDown = " + countDown);
-            robot.delay(1000);
-        }
-        
-        ColorSearch colorSearch = new ColorSearch()
-                                          .addColorBlock(r, g, b, minBlockSize, Integer.MAX_VALUE)
-                                          .setSearchZone(searchZone)
-                                          .setShowTargets(true)
-                                          .setTracking(true)
-                                          .debug();
-        
-        findHelperMatches(numberOfMatches, colorSearch);
-        
-        if (colorSearch.hasAnyResults()) {
-            System.out.println("colorSearch.getObjects().get(0).getSize() = " + colorSearch.getObjects().get(0).getSize());
-        }
-    }
-    
     public void waitUntilStopsMoving() {
         
         while (isMoving()) {robot.delay(200);}
-    }
-    
-    private void findHelperMatches(int numberOfMatches, Seeker seeker) {
-        
-        class Parameter {
-            
-            int    precision = 0;
-            double errorRate = 0.0;
-            
-            public Parameter(int precision, double errorRate) {
-                
-                this.precision = precision;
-                this.errorRate = errorRate;
-            }
-        }
-        
-        List<Parameter> parameters = new ArrayList<>();
-        for (int p = 0; p < 66; p += 5) {
-            for (double e = 0.0; e <= 0.30; e += 0.05) {
-                parameters.add(new Parameter(p, e));
-            }
-        }
-        
-        List<LocatedObject> objects = seeker.getObjects();
-        
-        while (!parameters.isEmpty()) {
-            
-            System.out.println("------------------------------------------------------------------------------------------------------------------------");
-            
-            Iterator<Parameter> iterator = parameters.iterator();
-            
-            while (iterator.hasNext()) {
-                
-                Parameter param = iterator.next();
-                seeker.setPrecision(param.precision);
-                seeker.setAllowedErrorRate(param.errorRate);
-                seeker.search();
-                System.out.println("precision = " + param.precision + " && errorRate = " + param.errorRate + " => " + objects.get(0).getPositions().size() + " matche(s)");
-                
-                if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
-            }
-        }
-        
-        //        if (seeker.hasAnyResults()) {
-        //            System.out.println("Positions : ");
-        //            objects.get(0).getPositions().forEach(position -> {
-        //                System.out.println(position.getX() + ":" + position.getY());
-        //            });
-        //        }
     }
     
     public boolean isMoving() {
@@ -204,7 +111,7 @@ public class Screen extends Peripheral {
         }
         
         @Override
-        void searchObject(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
+        boolean searchObject(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
             
             if (isBlockFound(capturedScreen, currentPosition, colorBlock)) {
                 
@@ -215,7 +122,9 @@ public class Screen extends Peripheral {
                 colorBlock.setHeight(colorBlock.getHeight() > cote ? colorBlock.getHeight() : cote);
                 colorBlock.setWidth(colorBlock.getWidth() > cote ? colorBlock.getWidth() : cote);
                 colorBlock.setPresent(true);
+                return true;
             }
+            return false;
         }
         
         @Override
@@ -305,13 +214,15 @@ public class Screen extends Peripheral {
         }
         
         @Override
-        void searchObject(BufferedImage capturedScreen, Position currentPosition, Picture picture) {
+        boolean searchObject(BufferedImage capturedScreen, Position currentPosition, Picture picture) {
             
             if (isPictureFound(capturedScreen, picture, currentPosition)) {
                 
                 picture.getPositions().add(new Position(currentPosition.getX() + searchZone.xMin, currentPosition.getY() + searchZone.yMin));
                 picture.setPresent(true);
+                return true;
             }
+            return false;
         }
         
         @Override
@@ -438,7 +349,12 @@ yxLoop:
      */
     @SuppressWarnings("unchecked")
     private static abstract class Seeker<S extends Seeker, T extends LocatedObject> {
-        
+    
+        public SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
+        public SearchHistory         searchHistory;
+    
+        public  boolean        optimizing          = false;
+        public  boolean        learning            = false;
         public  Integer        precision           = 0;
         public  Integer        expectedResults     = null;
         public  double         allowedErrorRate    = 0;
@@ -619,6 +535,8 @@ yxLoop:
             if (hidedObjects) { showObjects.setVisible(true); }
             
             if (isTracking) { updatePositions(capturedScreen); }
+    
+            if (learning) { findMatches(expectedResults); }
             
             for (T object : objects) {
                 
@@ -631,8 +549,20 @@ yxLoop:
                         while (overlapingExists(currentPosition)) {
                             currentPosition.setX(currentPosition.getX() + exclusiveZone * 2 + object.getWidth());
                         }
-                        
-                        searchObject(capturedScreen, currentPosition, object);
+    
+                        boolean found = searchObject(capturedScreen, currentPosition, object);
+    
+                        if (found && optimizing) {
+        
+                            SearchHistory.Position position = new SearchHistory.Position(currentPosition.getX(), currentPosition.getY());
+                            searchHistoryDatabase.addPosition(position, searchHistory.getHash());
+        
+                            searchHistory.setIterations(searchHistoryDatabase.increaseIterations(searchHistory.getHash()));
+        
+                            if (searchHistory.getIterations() >= 100) {
+                                optimiseSearchArea();
+                            }
+                        }
                     }
                 }
                 
@@ -644,6 +574,30 @@ yxLoop:
             
             if (debug || showTargets) {showObjects.setLocatedObjects(objects);}
             
+            return (S) this;
+        }
+    
+        public S learn(int expectedResults) {
+        
+            this.learning = true;
+            this.expectedResults = expectedResults;
+            setShowTargets(true);
+        
+            String hash = objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
+        
+            this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
+        
+            return (S) this;
+        }
+    
+        public S optimize() {
+        
+            this.optimizing = true;
+        
+            String hash = objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
+        
+            this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
+        
             return (S) this;
         }
         
@@ -697,8 +651,8 @@ yxLoop:
             
             return match;
         }
-        
-        abstract void searchObject(BufferedImage capturedScreen, Position currentPosition, T object);
+    
+        abstract boolean searchObject(BufferedImage capturedScreen, Position currentPosition, T object);
         
         abstract boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, T object);
         
@@ -738,6 +692,65 @@ yxLoop:
                     }
                 }
             }
+        }
+    
+        private void findMatches(int numberOfMatches) {
+        
+            List<Parameter> parameters = Parameter.fromDTOs(searchHistoryDatabase.selectSearchParameters(searchHistory.getHash()));
+            if (parameters.isEmpty()) {
+                for (int precision = 0; precision < 66; precision += 5) {
+                    for (double errorRate = 0.0; errorRate <= 0.30; errorRate += 0.05) {
+                        parameters.add(new Parameter(precision, errorRate));
+                    }
+                }
+            }
+        
+            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+        
+            Iterator<Parameter> iterator = parameters.iterator();
+        
+            while (iterator.hasNext()) {
+            
+                Parameter param = iterator.next();
+                setPrecision(param.getPrecision());
+                setAllowedErrorRate(param.getErrorRate());
+                search();
+                System.out.println("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + objects.get(0).getPositions().size() + " matche(s)");
+            
+                if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
+            }
+        
+            if (!parameters.isEmpty()) {
+                searchHistoryDatabase.updateSearchParameters(searchHistory.getHash(), parameters);
+            }
+        }
+    
+        private void optimiseSearchArea() {
+        
+            SearchHistory locatedObject = searchHistoryDatabase.selectSearchHistory(searchHistory.getHash(), false, true, false, false);
+        
+            int x1 = Integer.MAX_VALUE, x2 = 0, y1 = Integer.MAX_VALUE, y2 = 0;
+            for (SearchHistory.Position position : locatedObject.getPositions()) {
+            
+                if (position.getPosition_x() < x1) { x1 = position.getPosition_x(); }
+                if (position.getPosition_x() > x2) { x2 = position.getPosition_x(); }
+                if (position.getPosition_y() < y1) { y1 = position.getPosition_y(); }
+                if (position.getPosition_y() > y2) { y2 = position.getPosition_y(); }
+            }
+        
+            final int[] maximums = {0, 0};
+        
+            objects.forEach(object -> {
+                if (object.getWidth() > maximums[0]) { maximums[0] = object.getWidth() + 1; }
+                if (object.getHeight() > maximums[1]) { maximums[1] = object.getHeight() + 1; }
+            });
+        
+            SearchHistory.Area area = new SearchHistory.Area(x1, x2 + maximums[0], y1, y2 + maximums[1]);
+        
+            searchHistoryDatabase.updateOptimisedSearchArea(area, searchHistory.getHash());
+            searchHistory.setOptimisedSearchArea(area);
+        
+            searchHistoryDatabase.resetIterations(locatedObject.getHash());
         }
         
         private boolean isOverlaping(Position currentPosition, Position objectPosition, LocatedObject object) {

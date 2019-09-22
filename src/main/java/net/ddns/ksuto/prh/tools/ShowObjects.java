@@ -51,7 +51,14 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
         positions.add(position);
         
         List<LocatedObject> locatedObjectlist = new ArrayList<>();
-        LocatedObject       locatedObject     = new LocatedObject();
+        LocatedObject locatedObject = new LocatedObject() {
+        
+            @Override
+            public String getHash() {
+            
+                return "null";
+            }
+        };
         locatedObject.setWidth(10);
         locatedObject.setHeight(15);
         locatedObject.setPositions(positions);

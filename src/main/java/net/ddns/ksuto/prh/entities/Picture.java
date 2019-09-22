@@ -1,6 +1,7 @@
 package net.ddns.ksuto.prh.entities;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Picture extends LocatedObject {
     
     private Object        object;
@@ -26,5 +28,11 @@ public class Picture extends LocatedObject {
             // TODO : Catcher cette exception correctement !
             e.printStackTrace();
         }
+    }
+    
+    @Override
+    public String getHash() {
+        
+        return String.valueOf(hashCode());
     }
 }
