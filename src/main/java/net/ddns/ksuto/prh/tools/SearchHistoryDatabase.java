@@ -40,7 +40,7 @@ public class SearchHistoryDatabase extends AbstractDatabase {
     public void addPosition(SearchHistory.Position position, String objectHash) {
         
         queryWithStatement("INSERT INTO prh.position " +
-                           " VALUES (" + position.getId() + ", '" + objectHash + "', " + position.getPosition_x() + ", " + position.getPosition_y() + ", " + new Date() + ", 1)");
+                           " VALUES (" + position.getId() + ", '" + objectHash + "', " + position.getPosition_x() + ", " + position.getPosition_y() + ", '" + formatDate(new Date()) + "', 1)");
     }
     
     public SearchHistory selectSearchHistory(String objectHash, boolean chargeArea, boolean chargePositions, boolean chargeSearchParameters, boolean createIfNotExists) {

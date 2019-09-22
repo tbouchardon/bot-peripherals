@@ -23,8 +23,8 @@ public class SearchHistory {
     }
     
     public SearchHistory(String hash) {
-        
-        this.id = new Random().nextLong();
+    
+        this.id = Math.abs(new Random().nextLong());
         this.hash = hash;
     }
     
@@ -38,8 +38,8 @@ public class SearchHistory {
         private Integer version = 1;
         
         public Position(Integer position_x, Integer position_y) {
-            
-            this.id = new Random().nextLong();
+    
+            this.id = Math.abs(new Random().nextLong());
             this.position_x = position_x;
             this.position_y = position_y;
         }
@@ -56,8 +56,8 @@ public class SearchHistory {
         private Integer version = 1;
         
         public Area(Integer x_1, Integer x_2, Integer y_1, Integer y_2) {
-            
-            this.id = new Random().nextLong();
+    
+            this.id = Math.abs(new Random().nextLong());
             this.x_1 = x_1;
             this.x_2 = x_2;
             this.y_1 = y_1;
@@ -75,8 +75,8 @@ public class SearchHistory {
         private       Integer version   = 1;
         
         public Parameter(String hash) {
-            
-            this.id = new Random().nextLong();
+    
+            this.id = Math.abs(new Random().nextLong());
             this.object_hash = hash;
         }
     }

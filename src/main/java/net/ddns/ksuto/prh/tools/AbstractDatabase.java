@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.dbutils.QueryRunner;
@@ -36,6 +38,7 @@ public abstract class AbstractDatabase {
         }
         catch (SQLException e) {
             System.out.println("Query failure.");
+            System.out.println("Query failure.");
             e.printStackTrace();
         }
         
@@ -53,14 +56,13 @@ public abstract class AbstractDatabase {
             Statement statement = connection.createStatement();
             //            System.out.println("Reading objects records...");
             //            System.out.printf("%-30.30s  %-30.30s%n", "Id", "X Position");
-            
-            ResultSet resultSet = statement.executeQuery(query);
     
+            if (query.toLowerCase().startsWith("select")) { return statement.executeQuery(query); }
+            else { statement.executeUpdate(query); }
+            
             //            while (resultSet.next()) {
             //                System.out.printf("%-30.30s  %-30.30s%n", resultSet.getString("id"), resultSet.getString("hash"));
             //            }
-    
-            return resultSet;
         }
         catch (SQLException e) {
             System.out.println("Query failure.");
@@ -68,5 +70,15 @@ public abstract class AbstractDatabase {
         }
         
         return null;
+    }
+    
+    public String formatDate(Date date) {
+        
+        return getDatabaseDateFormat().format(date);
+    }
+    
+    public SimpleDateFormat getDatabaseDateFormat() {
+        
+        return new SimpleDateFormat("dd-MM-yyyy");
     }
 }
