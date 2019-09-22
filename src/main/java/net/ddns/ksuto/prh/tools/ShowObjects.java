@@ -94,7 +94,7 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
         }
         setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
         setLocation(0, 0);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         paintPane = new PaintPane();
         add(paintPane);
@@ -169,5 +169,10 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
             
             return new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT);
         }
+    }
+    
+    public void exit() {
+        
+        dispose();
     }
 }

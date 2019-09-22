@@ -505,6 +505,8 @@ yxLoop:
                 }
             }
             System.out.println(" ");
+    
+            showObjects.dispose();
             
             return (S) this;
         }
