@@ -78,7 +78,7 @@ public abstract class AbstractDatabase {
     }
     
     public SimpleDateFormat getDatabaseDateFormat() {
-        
-        return new SimpleDateFormat("dd-MM-yyyy");
+    
+        return new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     }
 }

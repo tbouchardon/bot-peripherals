@@ -30,7 +30,11 @@ public class SearchHistory {
     
     @Data
     public static class Position {
+    
+        public Position() {
         
+        }
+    
         private Long    id;
         private Integer position_x;
         private Integer position_y;
@@ -47,7 +51,11 @@ public class SearchHistory {
     
     @Data
     public static class Area {
+    
+        public Area() {
         
+        }
+    
         private Long    id;
         private Integer x_1;
         private Integer x_2;
@@ -67,8 +75,12 @@ public class SearchHistory {
     
     @Data
     public static class Parameter {
+    
+        public Parameter() {
         
-        private final String  object_hash;
+        }
+    
+        private       String  object_hash;
         private       Long    id;
         private       int     precision = 0;
         private       double  errorRate = 0.0;

@@ -57,9 +57,80 @@ public class Screen extends Peripheral {
         }
     }
     
+    public void pictureHelper(String url, int numberOfMatches) throws AWTException {
+        
+        pictureHelper(url, numberOfMatches, new Zone());
+    }
+    
+    public void pictureHelper(String url, int numberOfMatches, Zone searchZone) throws AWTException {
+        
+        for (int countDown = 5; countDown >= 0; countDown--) {
+            System.out.println("countDown = " + countDown);
+            robot.delay(1000);
+        }
+        
+        PictureSearch pictureSearch = new PictureSearch()
+                                              .addPictureWithUrl(url)
+                                              .setSearchZone(searchZone)
+                                              .setShowTargets(true)
+                                              .setTracking(true)
+                                              .debug();
+        
+        findHelperMatches(numberOfMatches, pictureSearch);
+    }
+    
     public void waitUntilStopsMoving() {
         
         while (isMoving()) {robot.delay(200);}
+    }
+    
+    private void findHelperMatches(int numberOfMatches, Seeker seeker) {
+        
+        class Parameter {
+            
+            int    precision = 0;
+            double errorRate = 0.0;
+            
+            public Parameter(int precision, double errorRate) {
+                
+                this.precision = precision;
+                this.errorRate = errorRate;
+            }
+        }
+        
+        List<Parameter> parameters = new ArrayList<>();
+        for (int p = 0; p < 66; p += 5) {
+            for (double e = 0.0; e <= 0.30; e += 0.05) {
+                parameters.add(new Parameter(p, e));
+            }
+        }
+        
+        List<LocatedObject> objects = seeker.getObjects();
+        
+        while (!parameters.isEmpty()) {
+            
+            System.out.println("------------------------------------------------------------------------------------------------------------------------");
+            
+            Iterator<Parameter> iterator = parameters.iterator();
+            
+            while (iterator.hasNext()) {
+                
+                Parameter param = iterator.next();
+                seeker.setPrecision(param.precision);
+                seeker.setAllowedErrorRate(param.errorRate);
+                seeker.search();
+                System.out.println("precision = " + param.precision + " && errorRate = " + param.errorRate + " => " + objects.get(0).getPositions().size() + " matche(s)");
+                
+                if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
+            }
+        }
+        
+        if (seeker.hasAnyResults()) {
+            System.out.println("Positions : ");
+            objects.get(0).getPositions().forEach(position -> {
+                System.out.println(position.getX() + ":" + position.getY());
+            });
+        }
     }
     
     public boolean isMoving() {
@@ -371,7 +442,8 @@ yxLoop:
         private boolean        showTargets                = false;
         private boolean        debug                      = false;
         private boolean        clickUntilDisappear        = false;
-        private int            iterationsBeforeOptimizing = 100;
+        private int            iterationsBeforeOptimizing = 10;
+        private int            iterationsToKeep           = 100;
         
         private Seeker() throws AWTException {
     
@@ -566,9 +638,10 @@ yxLoop:
     
                         if (found && optimizing) {
         
-                            SearchHistory.Position position = new SearchHistory.Position(currentPosition.getX(), currentPosition.getY());
+                            SearchHistory.Position position = new SearchHistory.Position(currentPosition.getX() + searchZone.xMin, currentPosition.getY() + searchZone.yMin);
                             searchHistoryDatabase.addPosition(position, searchHistory.getHash());
-        
+                            searchHistoryDatabase.removePositionsOverLimit(searchHistory.getHash(), iterationsToKeep);
+                            
                             searchHistory.setIterations(searchHistoryDatabase.increaseIterations(searchHistory.getHash()));
         
                             if (searchHistory.getIterations() >= iterationsBeforeOptimizing) {
@@ -604,17 +677,29 @@ yxLoop:
     
         public S optimize() {
         
-            return optimize(100);
+            return optimize(10);
         }
     
         public S optimize(int iterationsBeforeOptimizing) {
-            
+        
+            return optimize(iterationsBeforeOptimizing, 100);
+        }
+    
+        public S optimize(int iterationsBeforeOptimizing, int iterationsToKeep) {
+        
             this.optimizing = true;
             this.iterationsBeforeOptimizing = iterationsBeforeOptimizing;
-            
+            this.iterationsToKeep = iterationsToKeep;
+        
             String hash = objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
         
             this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
+        
+            if (searchHistory.getOptimisedSearchArea() != null) {
+            
+                SearchHistory.Area area = searchHistory.getOptimisedSearchArea();
+                searchZone = new Zone(area.getX_1(), area.getX_2(), area.getY_1(), area.getY_2());
+            }
         
             return (S) this;
         }
@@ -763,7 +848,7 @@ yxLoop:
                 if (object.getHeight() > maximums[1]) { maximums[1] = object.getHeight() + 1; }
             });
         
-            SearchHistory.Area area = new SearchHistory.Area(x1 > 6 ? x1 - 5 : x1, x2 + maximums[0] + 5, y1 > 6 ? y1 - 5 : y1, y2 + maximums[1] + 5);
+            SearchHistory.Area area = new SearchHistory.Area(x1 > 6 ? x1 - 5 : x1, x2 + maximums[0] + 10, y1 > 6 ? y1 - 5 : y1, y2 + maximums[1] + 10);
             
             searchHistoryDatabase.updateOptimisedSearchArea(area, searchHistory.getHash());
             searchHistory.setOptimisedSearchArea(area);

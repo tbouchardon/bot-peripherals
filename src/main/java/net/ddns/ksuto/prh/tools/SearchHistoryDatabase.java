@@ -34,7 +34,7 @@ public class SearchHistoryDatabase extends AbstractDatabase {
         queryWithStatement("DELETE FROM prh.area WHERE object_hash = '" + objectHash + "'");
         
         queryWithStatement("INSERT INTO prh.area " +
-                           " VALUES (" + area.getId() + ", " + objectHash + ", " + area.getX_1() + ", " + area.getX_2() + ", " + area.getY_1() + ", " + area.getY_2() + ", 1)");
+                           " VALUES (" + area.getId() + ", '" + objectHash + "', " + area.getX_1() + ", " + area.getX_2() + ", " + area.getY_1() + ", " + area.getY_2() + ", 1)");
     }
     
     public void addPosition(SearchHistory.Position position, String objectHash) {
@@ -133,6 +133,16 @@ public class SearchHistoryDatabase extends AbstractDatabase {
             queryWithStatement("INSERT INTO prh.search_parameter " +
                                " VALUES (" + searchParameter.getId() + ", '" + searchParameter.getObject_hash() + "', " + searchParameter.getPrecision() + ", " + searchParameter.getErrorRate() + "," +
                                " 1)");
+        }
+    }
+    
+    public void removePositionsOverLimit(String objectHash, int iterationsBeforeOptimizing) {
+        
+        List<SearchHistory.Position> positions = queryListWithRunner("SELECT * FROM prh.position WHERE object_hash = '" + objectHash + "' ORDER BY date DESC OFFSET " + iterationsBeforeOptimizing,
+                                                                     SearchHistory.Position.class);
+        
+        for (SearchHistory.Position position : positions) {
+            queryWithStatement("DELETE FROM prh.position WHERE id = " + position.getId());
         }
     }
 }

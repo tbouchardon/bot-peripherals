@@ -31,7 +31,7 @@ CREATE TABLE prh.position
     object_hash varchar(50),
     position_x  INTEGER,
     position_y  INTEGER,
-    date        date,
+    date        TIMESTAMP,
     version     INTEGER DEFAULT 1,
     FOREIGN KEY (object_hash) REFERENCES prh.object (hash)
 );
