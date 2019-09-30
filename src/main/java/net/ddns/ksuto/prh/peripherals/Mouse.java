@@ -2,6 +2,7 @@ package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.entities.Picture;
 import net.ddns.ksuto.prh.entities.Position;
+import net.ddns.ksuto.prh.helpers.PictureSearch;
 import net.ddns.ksuto.prh.properties.Constants;
 import net.ddns.ksuto.prh.tools.Debug;
 
@@ -223,10 +224,10 @@ public class Mouse extends Peripheral {
         ArrayList<int[]> alFound;
     
         try {
-            Screen.PictureSearch pictureSearch = new Screen.PictureSearch()
-                                                         .addPicturesWithUrls(sImage)
-                                                         .search();
-        
+            PictureSearch pictureSearch = new PictureSearch()
+                                                  .addPicturesWithUrls(sImage)
+                                                  .search();
+            
             if (pictureSearch.hasAnyResults()) {
                 for (Picture picture : pictureSearch.getObjects()) {
                     Debug.sout(picture.getReferenceImage() + " Found");
