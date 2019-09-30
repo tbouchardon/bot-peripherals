@@ -87,8 +87,8 @@ public class SearchHistoryDatabase extends AbstractDatabase {
     }
     
     public List<SearchHistory.Parameter> selectSearchParameters(String objectHash) {
-        
-        return queryListWithRunner("SELECT * FROM prh.search_parameter WHERE object_hash = '" + objectHash + "'", SearchHistory.Parameter.class);
+    
+        return queryListWithRunner("SELECT * FROM prh.search_parameter WHERE object_hash = '" + objectHash + "' ORDER BY error_rate ASC, precision ASC", SearchHistory.Parameter.class);
     }
     
     public Integer increaseIterations(String objectHash) {
