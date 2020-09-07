@@ -47,6 +47,34 @@ public class Screen extends Peripheral {
         while (isMoving()) {robot.delay(200);}
     }
     
+    public boolean hasChanged(BufferedImage image1, BufferedImage image2) {
+        
+        if (image1.getWidth() != image2.getWidth()) { return true; }
+        if (image1.getHeight() != image2.getHeight()) { return true; }
+        
+        for (int x = 0; x < image1.getWidth(); x++) {
+            for (int y = 0; y < image1.getHeight(); y++) {
+                if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    public void waitUntilHasChanged(Zone zone) {
+        
+        BufferedImage image1 = robot.createScreenCapture(zone.getRectangle());
+        BufferedImage image2;
+        
+        do {
+            robot.delay(250);
+            image2 = robot.createScreenCapture(zone.getRectangle());
+        }
+        while (!hasChanged(image1, image2));
+    }
+    
     public boolean isMoving() {
         
         BufferedImage screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
