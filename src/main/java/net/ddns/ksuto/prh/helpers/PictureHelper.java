@@ -12,30 +12,46 @@ import java.util.List;
 public class PictureHelper {
     
     Robot robot = new Robot();
-    ;
     
     public PictureHelper() throws AWTException {}
     
-    public void pictureHelper(String url, int numberOfMatches) throws AWTException {
-        
-        pictureHelper(url, numberOfMatches, new Screen.Zone());
+    public void pictureHelper(String url, int numberOfMatches, boolean learn) throws AWTException {
+    
+        pictureHelper(url, numberOfMatches, new Screen.Zone(), learn);
     }
     
-    public void pictureHelper(String url, int numberOfMatches, Screen.Zone searchZone) throws AWTException {
+    public void pictureHelper(String url, int numberOfMatches, Screen.Zone searchZone, boolean learn) throws AWTException {
         
         for (int countDown = 5; countDown >= 0; countDown--) {
             System.out.println("countDown = " + countDown);
             robot.delay(1000);
         }
         
-        PictureSearch pictureSearch = new PictureSearch()
-                                              .addPictureWithUrl(url)
-                                              .setSearchZone(searchZone)
-                                              .setShowTargets(true)
-                                              .setTracking(true)
-                                              .debug();
-        
-        findWorkingParameters(numberOfMatches, pictureSearch);
+        if (learn) {
+            PictureSearch search = (PictureSearch) new PictureSearch()
+                                                           .addPictureWithUrl(url)
+                                                           .setSearchZone(searchZone)
+                                                           .setShowTargets(true)
+                                                           .setTracking(true)
+                                                           .debug()
+                                                           .learn(numberOfMatches)
+                                                           .optimize()
+                                                           .search();
+            
+            search.clean();
+        }
+        else {
+            PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
+                                                                  .addPictureWithUrl(url)
+                                                                  .setSearchZone(searchZone)
+                                                                  .setShowTargets(true)
+                                                                  .setTracking(true)
+                                                                  .debug();
+            
+            findWorkingParameters(numberOfMatches, pictureSearch);
+            
+            pictureSearch.clean();
+        }
     }
     
     private void findWorkingParameters(int numberOfMatches, AbstractSeeker seeker) {
@@ -61,9 +77,19 @@ public class PictureHelper {
                 seeker.setPrecision(param.getPrecision());
                 seeker.setAllowedErrorRate(param.getErrorRate());
                 seeker.search();
-                System.out.println("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + objects.get(0).getPositions().size() + " matche(s)");
-                
+    
                 if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
+                else {
+                    System.out.println("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + objects.get(0).getPositions().size() + " matche(s)");
+                    objects.get(0).getPositions().forEach(position -> {
+                        System.out.println("    Area : " +
+                                           position.getX() + ", " +
+                                           position.getY() + ", " +
+                                           (objects.get(0).getWidth() + position.getX()) + ", " +
+                                           (objects.get(0).getHeight() + position.getY()));
+                    });
+                    System.out.println("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                }
             }
         }
         

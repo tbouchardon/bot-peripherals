@@ -24,15 +24,15 @@ public class Mouse extends Peripheral {
     public static final double Y_ADJUSTEMENT_FACTOR = 0.0;
     public static final double X_ADJUSTEMENT_FACTOR = 0.0;
     
-    public final Dimension     dim_D           = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    public final int           i_SCREEN_WIDTH  = (int) dim_D.getWidth();
-    public final int           i_SCREEN_HEIGHT = (int) dim_D.getHeight();
+    public final  Dimension     dim_D           = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    public final  int           i_SCREEN_WIDTH  = (int) dim_D.getWidth();
+    public final  int           i_SCREEN_HEIGHT = (int) dim_D.getHeight();
+    private final double        startX          = (i_SCREEN_WIDTH / 2d);
+    private final double        startY          = (i_SCREEN_HEIGHT / 2d);
     @Inject
-    private      Screen        screen;
+    private       Screen        screen;
     @Inject
-    private      MousePosition mousePosition;
-    private      double        startX          = (i_SCREEN_WIDTH / 2d);
-    private      double        startY          = (i_SCREEN_HEIGHT / 2d);
+    private       MousePosition mousePosition;
     
     Mouse() throws AWTException {
         
@@ -110,7 +110,7 @@ public class Mouse extends Peripheral {
         
         moveAndPress(iButtonMask, screen.iX_START, screen.iY_START, Constants.i_DELAY);
         for (int iBT = screen.iY_START; iBT > screen.iY_START - iDistance; iBT -= Constants.i_DRAG_SPACE) {
-            robot.mouseMove(screen.SCREEN_WIDTH / 2, iBT);
+            robot.mouseMove(Screen.SCREEN_WIDTH / 2, iBT);
             robot.delay(Constants.i_DRAG_DELAY);
         }
         release(iButtonMask, Constants.i_DELAY, false);
@@ -224,10 +224,10 @@ public class Mouse extends Peripheral {
         ArrayList<int[]> alFound;
     
         try {
-            PictureSearch pictureSearch = new PictureSearch()
-                                                  .addPicturesWithUrls(sImage)
-                                                  .search();
-            
+            PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
+                                                                  .addPicturesWithUrls(sImage)
+                                                                  .search();
+        
             if (pictureSearch.hasAnyResults()) {
                 for (Picture picture : pictureSearch.getObjects()) {
                     Debug.sout(picture.getReferenceImage() + " Found");

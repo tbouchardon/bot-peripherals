@@ -14,9 +14,9 @@ public class SearchHistoryDatabase extends AbstractDatabase {
         
         SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
         
-        SearchHistory searchHistory = searchHistoryDatabase.selectSearchHistory("stage_clear.png");
-        
-        System.out.println(searchHistory);
+        List<SearchHistory.Parameter> parameters = searchHistoryDatabase.selectSearchParameters("story_autorepeat_checkbox.png");
+    
+        System.out.println(parameters);
     }
     
     public SearchHistory createSearchHistory(String hash) {
@@ -27,6 +27,25 @@ public class SearchHistoryDatabase extends AbstractDatabase {
                            " VALUES (" + searchHistory.getId() + ", '" + searchHistory.getHash() + "', " + searchHistory.getIterations() + ", " + searchHistory.getVersion() + ")");
         
         return searchHistory;
+    }
+    
+    public void clearAreaOptimization(String objectHash) {
+        
+        queryWithStatement("DELETE FROM prh.position WHERE object_hash =  '" + objectHash + "'");
+        queryWithStatement("DELETE FROM prh.area WHERE object_hash =  '" + objectHash + "'");
+    }
+    
+    public void clearSearchOptimization(String objectHash) {
+        
+        queryWithStatement("DELETE FROM prh.search_parameter WHERE object_hash =  '" + objectHash + "'");
+    }
+    
+    public void clearObjectOptimization(String objectHash) {
+        
+        queryWithStatement("DELETE FROM prh.search_parameter WHERE object_hash =  '" + objectHash + "'");
+        queryWithStatement("DELETE FROM prh.position WHERE object_hash =  '" + objectHash + "'");
+        queryWithStatement("DELETE FROM prh.area WHERE object_hash =  '" + objectHash + "'");
+        queryWithStatement("DELETE FROM prh.object WHERE hash =  '" + objectHash + "'");
     }
     
     public void updateOptimisedSearchArea(SearchHistory.Area area, String objectHash) {
@@ -127,11 +146,12 @@ public class SearchHistoryDatabase extends AbstractDatabase {
         for (Parameter parameter : parameters) {
             
             SearchHistory.Parameter searchParameter = new SearchHistory.Parameter(objectHash);
-            searchParameter.setErrorRate(parameter.getErrorRate());
+            searchParameter.setError_rate(parameter.getErrorRate());
             searchParameter.setPrecision(parameter.getPrecision());
             
             queryWithStatement("INSERT INTO prh.search_parameter " +
-                               " VALUES (" + searchParameter.getId() + ", '" + searchParameter.getObject_hash() + "', " + searchParameter.getPrecision() + ", " + searchParameter.getErrorRate() + "," +
+                               " VALUES (" + searchParameter.getId() + ", '" + searchParameter.getObject_hash() + "', " + searchParameter.getPrecision() + ", " + searchParameter.getError_rate() +
+                               "," +
                                " 1)");
         }
     }

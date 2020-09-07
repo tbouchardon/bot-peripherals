@@ -25,19 +25,18 @@ public abstract class AbstractDatabase {
     }
     
     public <T> List<T> queryListWithRunner(String query, Class<T> type) {
-    
+        
         //        System.out.println("Java JDBC PostgreSQL Connexion Test");
         
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/prh", "postgres", "postgres")) {
-    
+            
             //            System.out.println("Connected to PostgreSQL database!");
             QueryRunner               queryRunner     = new QueryRunner();
             ResultSetHandler<List<T>> beanListHandler = new BeanListHandler<>(type);
-    
+            
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            System.out.println("Query failure.");
             System.out.println("Query failure.");
             e.printStackTrace();
         }
@@ -46,17 +45,17 @@ public abstract class AbstractDatabase {
     }
     
     public ResultSet queryWithStatement(String query) {
-    
+        
         //        System.out.println("Java JDBC PostgreSQL Connexion Test");
         
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/prh", "postgres", "postgres")) {
-    
+            
             //            System.out.println("Connected to PostgreSQL database!");
             
             Statement statement = connection.createStatement();
             //            System.out.println("Reading objects records...");
             //            System.out.printf("%-30.30s  %-30.30s%n", "Id", "X Position");
-    
+            
             if (query.toLowerCase().startsWith("select")) { return statement.executeQuery(query); }
             else { statement.executeUpdate(query); }
             
@@ -78,7 +77,13 @@ public abstract class AbstractDatabase {
     }
     
     public SimpleDateFormat getDatabaseDateFormat() {
-    
+        
         return new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    }
+    
+    public static void main(String[] args) {
+        
+        Integer monInt = new Integer(5);
+        System.out.println(monInt);
     }
 }

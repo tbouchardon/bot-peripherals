@@ -30,19 +30,19 @@ public class SearchHistory {
     
     @Data
     public static class Position {
-    
-        public Position() {
         
-        }
-    
         private Long    id;
         private Integer position_x;
         private Integer position_y;
         private Date    date    = new Date();
         private Integer version = 1;
         
+        public Position() {
+        
+        }
+        
         public Position(Integer position_x, Integer position_y) {
-    
+            
             this.id = Math.abs(new Random().nextLong());
             this.position_x = position_x;
             this.position_y = position_y;
@@ -51,11 +51,7 @@ public class SearchHistory {
     
     @Data
     public static class Area {
-    
-        public Area() {
         
-        }
-    
         private Long    id;
         private Integer x_1;
         private Integer x_2;
@@ -63,8 +59,10 @@ public class SearchHistory {
         private Integer y_2;
         private Integer version = 1;
         
+        public Area() { }
+        
         public Area(Integer x_1, Integer x_2, Integer y_1, Integer y_2) {
-    
+            
             this.id = Math.abs(new Random().nextLong());
             this.x_1 = x_1;
             this.x_2 = x_2;
@@ -75,19 +73,17 @@ public class SearchHistory {
     
     @Data
     public static class Parameter {
-    
-        public Parameter() {
         
-        }
-    
-        private       String  object_hash;
-        private       Long    id;
-        private       int     precision = 0;
-        private       double  errorRate = 0.0;
-        private       Integer version   = 1;
+        private String  object_hash;
+        private Long    id;
+        private int     precision  = 0;
+        private double  error_rate = 0.0d;
+        private Integer version    = 1;
+        
+        public Parameter() { }
         
         public Parameter(String hash) {
-    
+            
             this.id = Math.abs(new Random().nextLong());
             this.object_hash = hash;
         }

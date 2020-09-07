@@ -63,16 +63,21 @@ public class Screen extends Peripheral {
         return false;
     }
     
-    public void waitUntilHasChanged(Zone zone) {
+    public void waitUntilHasChanged(Zone zone, int msDelay) {
         
         BufferedImage image1 = robot.createScreenCapture(zone.getRectangle());
         BufferedImage image2;
         
         do {
-            robot.delay(250);
+            robot.delay(msDelay);
             image2 = robot.createScreenCapture(zone.getRectangle());
         }
         while (!hasChanged(image1, image2));
+    }
+    
+    public void waitUntilHasChanged(Zone zone) {
+        
+        waitUntilHasChanged(zone, 250);
     }
     
     public boolean isMoving() {

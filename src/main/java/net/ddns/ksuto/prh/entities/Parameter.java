@@ -30,6 +30,6 @@ public class Parameter {
     
     public static Parameter fromDTO(SearchHistory.Parameter searchParameter) {
         
-        return new Parameter(searchParameter.getPrecision(), searchParameter.getErrorRate());
+        return new Parameter(searchParameter.getPrecision(), searchParameter.getError_rate());
     }
 }
