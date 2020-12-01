@@ -34,7 +34,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     private static final int NOX_MAX_X = 1572;
     private static final int NOX_MAX_Y = 917;
     
-    public SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
+    public SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase("prh");
     public SearchHistory         searchHistory;
     
     public  boolean           optimizing                 = false;
@@ -102,22 +102,22 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
     
     public AbstractSeeker<S, T> clearAreaOptimization() {
-        
-        searchHistoryDatabase.clearAreaOptimization(getObjecstHash());
+    
+        searchHistoryDatabase.clearAreaOptimization(getObjectsHash());
         
         return this;
     }
     
     public AbstractSeeker<S, T> clearParamtersOptimization() {
-        
-        searchHistoryDatabase.clearSearchOptimization(getObjecstHash());
+    
+        searchHistoryDatabase.clearSearchOptimization(getObjectsHash());
         
         return this;
     }
     
     public AbstractSeeker<S, T> clearObjectOptimizations() {
-        
-        searchHistoryDatabase.clearObjectOptimization(getObjecstHash());
+    
+        searchHistoryDatabase.clearObjectOptimization(getObjectsHash());
         
         return this;
     }
@@ -175,8 +175,8 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
     
     public AbstractSeeker<S, T> click(Position position, T object) {
-        
-        return click(position, object.getWidth() / 2, object.getHeight() / 2);
+    
+        return click(position, (int) Math.floor(Math.random() * object.getWidth()), (int) Math.floor(Math.random() * object.getHeight()));
     }
     
     public AbstractSeeker<S, T> click(Position position) {
@@ -233,8 +233,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public AbstractSeeker<S, T> await(int milliseconds) {
         
         long until = System.currentTimeMillis() + milliseconds;
+        System.out.println("[TRACE] PRH : Awaiting " + getObjectsHash());
         while (System.currentTimeMillis() < until) {
-            System.out.print("\rTime's up : " + Math.floor((until - System.currentTimeMillis()) / 1000) + "...     ");
+            System.out.print("\r[TRACE] PRH : Time's up : " + (int) Math.floor((until - System.currentTimeMillis()) / 1000f) + "s    ");
             search();
             if (hasAnyResults() && (expectedResults == null || getNumbreOfResults() == expectedResults)) {
                 System.out.println(" ");
@@ -290,8 +291,8 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         this.learning = true;
         this.expectedResults = expectedResults;
         setShowTargets(true);
-        
-        String hash = getObjecstHash();
+    
+        String hash = getObjectsHash();
         
         this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
         
@@ -313,8 +314,8 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         this.optimizing = true;
         this.iterationsBeforeOptimizing = iterationsBeforeOptimizing;
         this.iterationsToKeep = iterationsToKeep;
-        
-        String hash = getObjecstHash();
+    
+        String hash = getObjectsHash();
         
         this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
         
@@ -347,6 +348,15 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         this.clickUntilDisappear = false;
         
         return seeker;
+    }
+    
+    public T getObjectByHash(String hash) {
+        
+        for (T object : getObjects()) {
+            if (object.getHash().equals(hash)) { return object; }
+        }
+        
+        return null;
     }
     
     boolean overlapingExists(Position currentPosition) {
@@ -463,8 +473,8 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         if (isTracking) { updatePositions(capturedScreen); }
         
         if ((learning || precision == null || allowedErrorRate == null) && !learningSearch) {
-            
-            if (debug && learning) { System.out.println(">>>> LEARNING <<<<"); }
+    
+            if (debug && learning) { System.out.println("[TRACE] PRH : >>>> LEARNING <<<<"); }
             
             java.util.List<Parameter> parameters = Parameter.fromDTOs(searchHistoryDatabase.selectSearchParameters(searchHistory.getHash()));
             
@@ -483,7 +493,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 for (; currentPosition.getX() < searchZone.getWidth() - (object.getWidth() + exclusiveZone); currentPosition.incX()) {
                     
                     while (overlapingExists(currentPosition)) {
-                        //                        System.out.println("overlapping: x =" + currentPosition.getX() +", y =" + currentPosition.getY());
+                        //                        System.out.println("[TRACE] PRH : overlapping: x =" + currentPosition.getX() +", y =" + currentPosition.getY());
                         currentPosition.setX(currentPosition.getX() + exclusiveZone * 2 + object.getWidth());
                     }
                     
@@ -534,12 +544,12 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             setPrecision(param.getPrecision());
             setAllowedErrorRate(param.getErrorRate());
             learningSearch();
-            
-            System.out.println("param.getErrorRate() = " + param.getErrorRate() + ", param.getPrecision() = " + param.getPrecision());
+    
+            System.out.println("[TRACE] PRH : param.getErrorRate() = " + param.getErrorRate() + ", param.getPrecision() = " + param.getPrecision());
             
             if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
             else {
-                if (debug) { System.out.println("   > OPTIMIZING <   "); }
+                if (debug) { System.out.println("[TRACE] PRH :    > OPTIMIZING <   "); }
                 for (Position position : objects.get(0).getPositions()) { addPositionAndOptimize(position, false); }
             }
         }
@@ -558,7 +568,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         //        Zone de recherche
         int x1 = Integer.MAX_VALUE, x2 = 0, y1 = Integer.MAX_VALUE, y2 = 0;
         for (SearchHistory.Position position : locatedObject.getPositions()) {
-        
+    
             if (position.getPosition_x() < x1) { x1 = position.getPosition_x(); }
             if (position.getPosition_x() > x2) { x2 = position.getPosition_x(); }
             if (position.getPosition_y() < y1) { y1 = position.getPosition_y(); }
@@ -618,6 +628,17 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return objects.stream().filter(LocatedObject::isPresent).findFirst().orElse(null);
     }
     
+    public int getNumberOfResults() {
+        
+        int numberOfResults = 0;
+        
+        for (T o : objects) {
+            numberOfResults += o.getPositions().size();
+        }
+        
+        return numberOfResults;
+    }
+    
     private int getNumbreOfResults() {
         
         return objects.stream()
@@ -627,14 +648,14 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                        .sum();
     }
     
-    public String getObjecstHash() {
-        
-        return objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
-    }
-    
     public List<T> getObjects() {
         
         return objects;
+    }
+    
+    public String getObjectsHash() {
+        
+        return objects.stream().map(LocatedObject::getHash).collect(Collectors.joining("|"));
     }
     
     /**

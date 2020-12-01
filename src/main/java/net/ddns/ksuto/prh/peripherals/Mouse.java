@@ -9,6 +9,8 @@ import net.ddns.ksuto.prh.tools.Debug;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -53,20 +55,20 @@ public class Mouse extends Peripheral {
     }
     
     public void dragAngle(int angle, int distance, int iButtonMask) {
-        
-        //        System.out.println("angle = " + angle);
+    
+        //        System.out.println("[TRACE] PRH : angle = " + angle);
         double toRadians = Math.toRadians(angle);
-        //        System.out.println("toRadians = " + toRadians);
+        //        System.out.println("[TRACE] PRH : toRadians = " + toRadians);
         
         double xMod = toRadians % (2 * Math.PI) - Math.PI / 2;
-        //        System.out.println("xMod = " + xMod);
+        //        System.out.println("[TRACE] PRH : xMod = " + xMod);
         double yMod = toRadians % (2 * Math.PI) - Math.PI;
-        //        System.out.println("yMod = " + yMod);
+        //        System.out.println("[TRACE] PRH : yMod = " + yMod);
         
         double xFactor = -(2 / Math.PI * Math.abs(xMod) - 1);
-        //        System.out.println("xFactor = " + xFactor);
+        //        System.out.println("[TRACE] PRH : xFactor = " + xFactor);
         double yFactor = 2 / Math.PI * Math.abs(yMod) - 1;
-        //        System.out.println("yFactor = " + yFactor);
+        //        System.out.println("[TRACE] PRH : yFactor = " + yFactor);
         
         if (xFactor < 0) { distance = (int) (distance * (1 - X_ADJUSTEMENT_FACTOR * (Math.abs(xFactor)))); }
         if (yFactor < 0) { distance = (int) (distance * (1 - Y_ADJUSTEMENT_FACTOR * (Math.abs(yFactor)))); }
@@ -252,6 +254,143 @@ public class Mouse extends Peripheral {
         robot.mouseMove(x, y);
         robot.delay(Constants.i_DELAY);
     }
+    
+    public void naturalMoveTo(int xB, int yB) {
+        
+        final int DECALAGE        = 0;
+        final int MAXIMUM_OVERRUN = 200;
+        
+        double xA = MouseInfo.getPointerInfo().getLocation().getX() + DECALAGE;
+        double yA = MouseInfo.getPointerInfo().getLocation().getY() + DECALAGE;
+        xB += DECALAGE;
+        yB += DECALAGE;
+        
+        boolean isLeftToRight      = xB > xA;
+        boolean overRun            = Math.random() < 0.2;
+        int     numberOfDeviations = (int) Math.ceil(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.SUP(0,001*EXP(B1*8,5);0) => 1 à 5 avec 80% de probabilité 1
+        
+        System.out.println("numberOfDeviations = " + numberOfDeviations);
+        
+        List<Point> pointList = new ArrayList<>();
+        pointList.add(new Point((int) xA,
+                                (int) yA));
+        
+        double xnA = xA;
+        double m   = (yB - yA) / (xB - xA); // y = mx + p
+        //        double mp  = -1 / m; // Perpendiculaire
+        
+        for (int index = 1; index < numberOfDeviations; index++) {
+            
+            double dxnAxB = Math.abs(xnA - xB);
+            
+            double xC = ((isLeftToRight ? 1 : -1) * (((dxnAxB - (dxnAxB * 0.25)) * Math.random() * 0.75) + (dxnAxB * 0.25))) + xnA;
+            double yC = (m * (xC - xA)) + yA;
+            Point  c  = new Point((int) xC, (int) yC);
+            pointList.add(c);
+            xnA = xC;
+        }
+        
+        System.out.println("overRun = " + overRun);
+        
+        if (overRun) {
+            pointList.add(new Point((int) (xB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2),
+                                    (int) (yB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2)));
+        }
+        
+        pointList.add(new Point(xB,
+                                yB));
+        
+        System.out.println("pointList = {" + pointList.stream().map(point -> "[" + point.getX() + ", " + point.getY() + "]").collect(Collectors.joining(", ")) + "}");
+        
+        List<Point> mousePositions = new ArrayList<>();
+        mousePositions.add(pointList.get(0));
+        
+        for (int index = 1; index < pointList.size(); index++) {
+            
+            Point a = pointList.get(index - 1);
+            Point b = pointList.get(index); // y = mx + p
+            
+            for (double x = a.getX(); x < b.getX(); x += 0.01) {
+                
+                m = (b.getY() - a.getY()) / (b.getX() - a.getX());
+                
+                double y = (m * (x - a.getX())) + a.getY();
+                
+                if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(x) ||
+                    mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(y)) {
+                    
+                    //                    if (Math.random() < 0.4) { y += 2; }
+                    Point point = new Point((int) Math.floor(x), (int) Math.floor(y));
+                    mousePositions.add(point);
+                    a = point;
+                }
+            }
+        }
+        
+        System.out.println("mousePositions.size() = " + mousePositions.size());
+        
+        mousePositions.forEach(point -> {
+            robot.mouseMove((int) point.getX() - DECALAGE,
+                            (int) point.getY() - DECALAGE);
+            robot.delay(5);
+        });
+    }
+    
+    //        xO = xC + X cos θ
+    //        yO = yC + X sin θ
+    //
+    //        avec X déplacement positif ou négatif le long de la droite.
+    //        avec θ = angle de la droite / à l'axe
+    //        avec θ = tan-1(m)
+    //        avec m = coefficient directeur de la droite d'équation y = mx + p
+    
+    //    double teta = Math.atan(mp);
+    //
+    //    int side = 1;
+    //        for (int index = 1; index < pointList.size(); index++) {
+    //        Point a = pointList.get(index - 1);
+    //        Point b = pointList.get(index);
+    //
+    //        double dAB     = Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2));
+    //        double dCOalea = Math.random() * dAB * 0.2;
+    //        double dCO     = dAB + (dCOalea - dCOalea / 2);
+    //
+    //        // soit C le milieu de AB
+    //        double dxAxB = Math.abs(a.getX() - b.getX());
+    //        double xC    = isLeftToRight ? a.getX() + dxAxB / 2 : a.getX() - dxAxB / 2;
+    //        double yC    = (mp * (xC - a.getX())) + a.getY();
+    //
+    //        // O le futur centre du cercle
+    //        double xO = xC + dCO * side * Math.cos(teta);
+    //        double yO = yC + dCO * side * Math.sin(teta);
+    //
+    //        // la double équation cartésienne du cercle (en fait une équation pour chaque demi-cercle délimité par le diamètre horizontal) :
+    //        // y = b +- √(r²-(x-a)²)
+    //        // avec b = yO
+    //        // avec a = xO
+    //
+    //        double rayon = Math.sqrt(Math.pow(a.getX() - xO, 2) + Math.pow(a.getY() - yO, 2)); // le rayon correspond à la distance AO
+    //
+    //        for (double x = a.getX(); x < b.getX(); x += 0.01) {
+    //            double y = yO + Math.sqrt(Math.pow(rayon, 2) - Math.pow(x - xO, 2)) * -side;
+    //            //                System.out.println("[TRACE] PRH : y = " + y);
+    //            if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(x) ||
+    //                mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(y)) {
+    //                mousePositions.add(new Point((int) Math.floor(x), (int) Math.floor(y)));
+    //            }
+    //        }
+    //
+    //        System.out.println("mousePositions.size() = " + mousePositions.size());
+    //
+    //        mousePositions.forEach(point -> {
+    //            //                System.out.println("point = " + point);
+    //            robot.mouseMove((int) point.getX() - DECALAGE,
+    //                            (int) point.getY() - DECALAGE);
+    //            robot.delay(1);
+    //        });
+    //
+    //        side = -side;
+    //    }
     
     private void zoom(int steps, boolean out) {
         

@@ -15,5 +15,16 @@ public abstract class LocatedObject {
     private int            width            = 0;
     private int            height           = 0;
     
+    public boolean hasAnyResults() {
+        
+        return positions.size() > 0;
+    }
+    
+    public Position getFirstResult() {
+        
+        if (!hasAnyResults()) { return null; }
+        return positions.get(0);
+    }
+    
     public abstract String getHash();
 }

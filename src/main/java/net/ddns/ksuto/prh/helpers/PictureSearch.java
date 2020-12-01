@@ -37,13 +37,20 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         picture.setObject(o);
         
         objects.add(picture);
-        
+    
         return this;
     }
     
     public PictureSearch addPictureWithUrl(String url) {
         
         this.objects.add(new Picture(url));
+        
+        return this;
+    }
+    
+    public PictureSearch addPicture(Picture picture) {
+        
+        this.objects.add(picture);
         
         return this;
     }

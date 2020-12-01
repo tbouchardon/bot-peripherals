@@ -8,6 +8,12 @@ import net.ddns.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import javax.imageio.ImageIO;
 
 /**
  * Created by TBO on 15/07/2016.
@@ -47,78 +53,116 @@ public class Screen extends Peripheral {
         while (isMoving()) {robot.delay(200);}
     }
     
-    public boolean hasChanged(BufferedImage image1, BufferedImage image2) {
+    public int numberOfChangedZones(BufferedImage image1, BufferedImage image2, List<Zone> zones) {
         
-        if (image1.getWidth() != image2.getWidth()) { return true; }
-        if (image1.getHeight() != image2.getHeight()) { return true; }
+        int numberOfChangedZones = 0;
         
-        for (int x = 0; x < image1.getWidth(); x++) {
-            for (int y = 0; y < image1.getHeight(); y++) {
+        for (Zone zone : zones) {
+            if (zoneHasChanged(image1, image2, zone)) { numberOfChangedZones++; }
+        }
+        
+        return numberOfChangedZones;
+    }
+    
+    public boolean zoneHasChanged(BufferedImage image1, BufferedImage image2, Zone zone) {
+        
+        for (int x = zone.xMin; x < zone.xMax; x++) {
+            for (int y = zone.yMin; y < zone.yMax; y++) {
                 if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+                    System.out.println("[TRACE] PRH : Change : x = " + x + ", y = " + y);
                     return true;
                 }
             }
         }
-        
         return false;
     }
     
-    public void waitUntilHasChanged(Zone zone, int msDelay) {
+    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds) throws Exception {
         
-        BufferedImage image1 = robot.createScreenCapture(zone.getRectangle());
-        BufferedImage image2;
-        
-        do {
-            robot.delay(msDelay);
-            image2 = robot.createScreenCapture(zone.getRectangle());
-        }
-        while (!hasChanged(image1, image2));
+        waitUntilHasChanged(zones, msDelay, zoneEnum, maxWaitingMilliseconds, false);
     }
     
-    public void waitUntilHasChanged(Zone zone) {
+    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds, boolean debug) throws Exception {
         
-        waitUntilHasChanged(zone, 250);
+        BufferedImage image1 = robot.createScreenCapture(Zone.ALL.getRectangle());
+        BufferedImage image2;
+        
+        if (debug) { writeImage(image1, System.currentTimeMillis() + "_base"); }
+        
+        int numberOfChangedZones;
+        
+        long startTime = System.currentTimeMillis();
+        
+        do {
+            robot.delay(msDelay == null ? 250 : msDelay);
+            image2 = robot.createScreenCapture(Zone.ALL.getRectangle());
+            
+            if (debug) { writeImage(image2, System.currentTimeMillis() + "_comparingTo"); }
+            
+            numberOfChangedZones = numberOfChangedZones(image1, image2, zones);
+            if (System.currentTimeMillis() > startTime + (maxWaitingMilliseconds == null ? 60 * 1000 : maxWaitingMilliseconds)) {
+                System.out.println("[TRACE] PRH : Things should have changed but nothing happened");
+                break;
+            }
+        }
+        while (!(zoneEnum == ZoneEnum.ALL && numberOfChangedZones == zones.size()) &&
+               !(zoneEnum == ZoneEnum.ANY && numberOfChangedZones > 0));
+    }
+    
+    public void waitUntilHasChanged(Zone zone) throws Exception {
+        
+        waitUntilHasChanged(Collections.singletonList(zone), 250, ZoneEnum.ALL, null);
+    }
+    
+    public void waitUntilHasChanged(Zone zone, Integer maxWaitingMilliseconds) throws Exception {
+        
+        waitUntilHasChanged(Collections.singletonList(zone), 250, ZoneEnum.ALL, maxWaitingMilliseconds);
+    }
+    
+    public void waitUntilHasChanged(List<Zone> zones) throws Exception {
+        
+        waitUntilHasChanged(zones, 250, ZoneEnum.ALL, null);
+    }
+    
+    public void waitUntilAnyHasChanged(List<Zone> zones) throws Exception {
+        
+        waitUntilHasChanged(zones, 250, ZoneEnum.ANY, null);
+    }
+    
+    public void writeImage(BufferedImage bi, String name) {
+        
+        File outputfile = new File(name + ".jpg");
+        try {
+            ImageIO.write(bi, "jpg", outputfile);
+        }
+        catch (IOException e) {
+            // TODO : Catcher cette exception correctement !
+            e.printStackTrace();
+        }
     }
     
     public boolean isMoving() {
         
         BufferedImage screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
         
-        //        try {
-        //            BufferedWriter writer     = null;
-        //            File           outputfile = new File("moving1.jpg");
-        //            ImageIO.write(screenCapture, "png", outputfile);
-        //        }
-        //        catch (IOException e) {
-        //        }
-        
         int initialPixelColor1 = screenCapture.getRGB(screenCapture.getWidth() / 2 - 100, screenCapture.getHeight() / 2 - 100);
         int initialPixelColor2 = screenCapture.getRGB(screenCapture.getWidth() / 2, screenCapture.getHeight() / 2);
         int initialPixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
         
         robot.delay(200);
-        
+    
         screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
-        
-        //        try {
-        //            BufferedWriter writer     = null;
-        //            File           outputfile = new File("moving2.jpg");
-        //            ImageIO.write(screenCapture, "png", outputfile);
-        //        }
-        //        catch (IOException e) {
-        //        }
-        
+    
         int pixelColor1 = screenCapture.getRGB(screenCapture.getWidth() / 2 - 100, screenCapture.getHeight() / 2 - 100);
         int pixelColor2 = screenCapture.getRGB(screenCapture.getWidth() / 2, screenCapture.getHeight() / 2);
         int pixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
-        
-        //        System.out.println("px1 " + pixelColor1 + " : " + initialPixelColor1);
-        //        System.out.println("px2 " + pixelColor2 + " : " + initialPixelColor2);
-        //        System.out.println(" ");
-        //        System.out.println("px3 " + pixelColor3 + " : " + initialPixelColor3);
-        
+    
         return pixelColor1 != initialPixelColor1 &&
                pixelColor2 != initialPixelColor2; //|| pixelColor3 == initialPixelColor3;
+    }
+    
+    public enum ZoneEnum {
+        ANY, ALL
     }
     
     @Data

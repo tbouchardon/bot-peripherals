@@ -10,12 +10,17 @@ import java.util.List;
 
 public class SearchHistoryDatabase extends AbstractDatabase {
     
+    public SearchHistoryDatabase(String database) {
+        
+        super(database);
+    }
+    
     public static void main(String[] args) {
         
-        SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase();
+        SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase("prh");
         
         List<SearchHistory.Parameter> parameters = searchHistoryDatabase.selectSearchParameters("story_autorepeat_checkbox.png");
-    
+        
         System.out.println(parameters);
     }
     

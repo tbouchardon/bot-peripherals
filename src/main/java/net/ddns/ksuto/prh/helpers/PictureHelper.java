@@ -23,7 +23,7 @@ public class PictureHelper {
     public void pictureHelper(String url, int numberOfMatches, Screen.Zone searchZone, boolean learn) throws AWTException {
         
         for (int countDown = 5; countDown >= 0; countDown--) {
-            System.out.println("countDown = " + countDown);
+            System.out.println("[TRACE] PRH : countDown = " + countDown);
             robot.delay(1000);
         }
         
@@ -55,46 +55,52 @@ public class PictureHelper {
     }
     
     private void findWorkingParameters(int numberOfMatches, AbstractSeeker seeker) {
-        
+    
         java.util.List<Parameter> parameters = new ArrayList<>();
-        for (int p = 0; p < 66; p += 5) {
-            for (double e = 0.0; e <= 0.30; e += 0.05) {
+        for (double e = 0.0; e <= 0.30; e += 0.05) {
+            for (int p = 0; p < 66; p += 5) {
                 parameters.add(new Parameter(p, e));
             }
         }
-        
+    
         List<LocatedObject> objects = seeker.getObjects();
+    
+        java.util.List<Parameter> top10BestParameters = new ArrayList<>();
+    
+        while (!parameters.isEmpty() || !top10BestParameters.isEmpty()) {
         
-        while (!parameters.isEmpty()) {
-            
-            System.out.println("------------------------------------------------------------------------------------------------------------------------");
-            
-            Iterator<Parameter> iterator = parameters.iterator();
-            
+            while (!parameters.isEmpty() && top10BestParameters.size() < 10) {
+                top10BestParameters.add(parameters.remove(0));
+            }
+        
+            System.out.println("[TRACE] PRH : ------------------------------------------------------------------------------------------------------------------------");
+        
+            Iterator<Parameter> iterator = top10BestParameters.iterator();
+        
             while (iterator.hasNext()) {
-                
+            
                 Parameter param = iterator.next();
                 seeker.setPrecision(param.getPrecision());
                 seeker.setAllowedErrorRate(param.getErrorRate());
                 seeker.search();
-    
+            
                 if (objects.get(0).getPositions().size() != numberOfMatches) { iterator.remove(); }
                 else {
-                    System.out.println("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + objects.get(0).getPositions().size() + " matche(s)");
+                    System.out.println("[TRACE] PRH : precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + objects.get(0).getPositions().size() + " matche(s)");
                     objects.get(0).getPositions().forEach(position -> {
-                        System.out.println("    Area : " +
+                        System.out.println("[TRACE] PRH :     Area : " +
                                            position.getX() + ", " +
                                            position.getY() + ", " +
                                            (objects.get(0).getWidth() + position.getX()) + ", " +
                                            (objects.get(0).getHeight() + position.getY()));
                     });
-                    System.out.println("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                    System.out.println("[TRACE] PRH :     .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
                 }
             }
         }
         
         if (seeker.hasAnyResults()) {
-            System.out.println("Positions : ");
+            System.out.println("[TRACE] PRH : Positions : ");
             objects.get(0).getPositions().forEach(position -> {
                 System.out.println(position.getX() + ":" + position.getY());
             });

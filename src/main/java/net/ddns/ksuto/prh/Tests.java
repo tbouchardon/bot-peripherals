@@ -12,21 +12,27 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+
 public class Tests {
     
     final Dimension dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
     final int       SCREEN_WIDTH  = (int) dim_D.getWidth();
     final int       SCREEN_HEIGHT = (int) dim_D.getHeight();
+    @Inject
+    PeripheralRobotHelper robotHelper;
     
-    public static void main(String[] args) throws AWTException, InterruptedException {
+    public static void main(String[] args) throws AWTException {
         
-        Tests tests = new Tests();
+        Tests tests = Guice.createInjector().getInstance(Tests.class);
+        tests.robotHelper.getMouse().move(200, 200);
+        tests.naturalMove();
+    }
+    
+    private void naturalMove() throws AWTException {
         
-        //        tests.run();
-        //        tests.grabber();
-        //        tests.rgb();
-        while (true) { tests.getMouseHex(1500); }
-        //        tests.raster();
+        robotHelper.getMouse().naturalMoveTo(500, 500);
     }
     
     private void run() throws InterruptedException {
@@ -46,7 +52,7 @@ public class Tests {
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
         
-        System.out.println("RunnableRobot : " + (System.currentTimeMillis() - startTime));
+        System.out.println("[TRACE] PRH : RunnableRobot : " + (System.currentTimeMillis() - startTime));
     }
     
     private void rgb() throws AWTException {
@@ -62,11 +68,11 @@ public class Tests {
             
             for (int x = 0; x < capturedScreen.getWidth(); x++) {
                 for (int y = 0; y < capturedScreen.getHeight(); y++) {
-                    if (capturedScreen.getRGB(x, y) == 13) { System.out.println("hello"); }
+                    if (capturedScreen.getRGB(x, y) == 13) { System.out.println("[TRACE] PRH : hello"); }
                 }
             }
         }
-        System.out.println("getRGB : " + (System.currentTimeMillis() - startTime));
+        System.out.println("[TRACE] PRH : getRGB : " + (System.currentTimeMillis() - startTime));
     }
     
     private void raster() throws AWTException {
@@ -82,11 +88,11 @@ public class Tests {
             
             int[] pixels = ((DataBufferInt) capturedScreen.getRaster().getDataBuffer()).getData();
             for (int p : pixels) {
-                
-                if (p == 13) { System.out.println("hello"); }
+    
+                if (p == 13) { System.out.println("[TRACE] PRH : hello"); }
             }
         }
-        System.out.println("getRaster : " + (System.currentTimeMillis() - startTime));
+        System.out.println("[TRACE] PRH : getRaster : " + (System.currentTimeMillis() - startTime));
     }
     
     private String getMouseHex(int delay) throws AWTException {
@@ -96,7 +102,7 @@ public class Tests {
         Color pixelColor = robot.getPixelColor(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y);
         System.out.print(pixelColor);
         String formatedColor = String.format("#%02x%02x%02x", pixelColor.getRed(), pixelColor.getGreen(), pixelColor.getBlue());
-        System.out.println(" => " + formatedColor);
+        System.out.println("[TRACE] PRH :  => " + formatedColor);
         
         return formatedColor;
     }
