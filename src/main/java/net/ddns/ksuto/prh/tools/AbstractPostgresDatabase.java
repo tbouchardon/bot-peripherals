@@ -1,6 +1,7 @@
 package net.ddns.ksuto.prh.tools;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,14 +13,28 @@ import java.util.List;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
+import org.intellij.lang.annotations.Language;
 
-public abstract class AbstractDatabase {
+public abstract class AbstractPostgresDatabase {
     
     String database;
+    String url;
     
-    public AbstractDatabase(String database) {
+    public AbstractPostgresDatabase(String database) {
         
         this.database = database;
+        this.url = "jdbc:postgresql://127.0.0.1:5432/" + database;
+        
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+            if (connection != null) {
+                DatabaseMetaData meta = connection.getMetaData();
+                //                System.out.println("[INFO] the driver name is " + meta.getDriverName());
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("[ERROR] " + e.getMessage());
+        }
     }
     
     public static void main(String[] args) {
@@ -28,20 +43,36 @@ public abstract class AbstractDatabase {
         System.out.println(monInt);
     }
     
-    public <T> T queryOneWithRunner(String query, Class<T> type) {
+    public <T> T queryOneRecordWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
         
-        List<T> list = queryListWithRunner(query, type);
+        List<T> list = queryRecordListWithRunner(query, type);
         
         if (list.isEmpty()) { return null; }
         
         return list.get(0);
     }
     
-    public <T> List<T> queryListWithRunner(String query, Class<T> type) {
+    public <T> T queryOneFieldWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
         
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
         
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/" + database, "postgres", "postgres")) {
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+            
+            QueryRunner queryRunner = new QueryRunner();
+            return queryRunner.query(connection, query, new ScalarHandler<T>());
+        }
+        catch (SQLException e) {
+            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    public <T> List<T> queryRecordListWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
+        
+        //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
+        
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
             
             //            System.out.println("[TRACE] PRH : Connected to PostgreSQL database!");
             QueryRunner               queryRunner     = new QueryRunner();
@@ -50,8 +81,7 @@ public abstract class AbstractDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            System.out.println("[TRACE] PRH : Query failure.");
-            e.printStackTrace();
+            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
         }
         
         return null;
@@ -61,7 +91,7 @@ public abstract class AbstractDatabase {
     
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
     
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/" + database, "postgres", "postgres")) {
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
         
             //            System.out.println("[TRACE] PRH : Connected to PostgreSQL database!");
         
@@ -71,14 +101,13 @@ public abstract class AbstractDatabase {
         
             if (query.toLowerCase().startsWith("select")) { return statement.executeQuery(query); }
             else { statement.executeUpdate(query); }
-            
+        
             //            while (resultSet.next()) {
             //                System.out.printf("%-30.30s  %-30.30s%n", resultSet.getString("id"), resultSet.getString("hash"));
             //            }
         }
         catch (SQLException e) {
-            System.out.println("[TRACE] PRH : Query failure.");
-            e.printStackTrace();
+            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
         }
         
         return null;

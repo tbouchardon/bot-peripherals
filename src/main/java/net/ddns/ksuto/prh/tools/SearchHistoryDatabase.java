@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-public class SearchHistoryDatabase extends AbstractDatabase {
+public class SearchHistoryDatabase extends AbstractPostgresDatabase {
     
     public SearchHistoryDatabase(String database) {
         
@@ -96,23 +96,23 @@ public class SearchHistoryDatabase extends AbstractDatabase {
     }
     
     public SearchHistory selectSearchHistory(String objectHash) {
-        
-        return queryOneWithRunner("SELECT * FROM prh.object WHERE hash = '" + objectHash + "'", SearchHistory.class);
+    
+        return queryOneRecordWithRunner("SELECT * FROM prh.object WHERE hash = '" + objectHash + "'", SearchHistory.class);
     }
     
     public SearchHistory.Area selectSearchArea(String objectHash) {
-        
-        return queryOneWithRunner("SELECT * FROM prh.area WHERE object_hash = '" + objectHash + "'", SearchHistory.Area.class);
+    
+        return queryOneRecordWithRunner("SELECT * FROM prh.area WHERE object_hash = '" + objectHash + "'", SearchHistory.Area.class);
     }
     
     public List<SearchHistory.Position> selectPositions(String objectHash) {
-        
-        return queryListWithRunner("SELECT * FROM prh.position WHERE object_hash = '" + objectHash + "'", SearchHistory.Position.class);
+    
+        return queryRecordListWithRunner("SELECT * FROM prh.position WHERE object_hash = '" + objectHash + "'", SearchHistory.Position.class);
     }
     
     public List<SearchHistory.Parameter> selectSearchParameters(String objectHash) {
     
-        return queryListWithRunner("SELECT * FROM prh.search_parameter WHERE object_hash = '" + objectHash + "' ORDER BY error_rate ASC, precision ASC", SearchHistory.Parameter.class);
+        return queryRecordListWithRunner("SELECT * FROM prh.search_parameter WHERE object_hash = '" + objectHash + "' ORDER BY error_rate ASC, precision ASC", SearchHistory.Parameter.class);
     }
     
     public Integer increaseIterations(String objectHash) {
@@ -162,10 +162,11 @@ public class SearchHistoryDatabase extends AbstractDatabase {
     }
     
     public void removePositionsOverLimit(String objectHash, int iterationsBeforeOptimizing) {
-        
-        List<SearchHistory.Position> positions = queryListWithRunner("SELECT * FROM prh.position WHERE object_hash = '" + objectHash + "' ORDER BY date DESC OFFSET " + iterationsBeforeOptimizing,
-                                                                     SearchHistory.Position.class);
-        
+    
+        List<SearchHistory.Position> positions =
+                queryRecordListWithRunner("SELECT * FROM prh.position WHERE object_hash = '" + objectHash + "' ORDER BY date DESC OFFSET " + iterationsBeforeOptimizing,
+                                                                           SearchHistory.Position.class);
+    
         for (SearchHistory.Position position : positions) {
             queryWithStatement("DELETE FROM prh.position WHERE id = " + position.getId());
         }

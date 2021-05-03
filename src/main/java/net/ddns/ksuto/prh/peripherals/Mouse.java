@@ -2,6 +2,7 @@ package net.ddns.ksuto.prh.peripherals;
 
 import net.ddns.ksuto.prh.entities.Picture;
 import net.ddns.ksuto.prh.entities.Position;
+import net.ddns.ksuto.prh.helpers.Arithmetic;
 import net.ddns.ksuto.prh.helpers.PictureSearch;
 import net.ddns.ksuto.prh.properties.Constants;
 import net.ddns.ksuto.prh.tools.Debug;
@@ -12,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.inject.Inject;
 
 /**
@@ -20,24 +23,35 @@ import com.google.inject.Inject;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Mouse extends Peripheral {
     
-    public static final int LEFT  = InputEvent.BUTTON1_DOWN_MASK;
-    public static final int RIGHT = InputEvent.BUTTON3_DOWN_MASK;
-    
-    public static final double Y_ADJUSTEMENT_FACTOR = 0.0;
-    public static final double X_ADJUSTEMENT_FACTOR = 0.0;
-    
-    public final  Dimension     dim_D           = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    public final  int           i_SCREEN_WIDTH  = (int) dim_D.getWidth();
-    public final  int           i_SCREEN_HEIGHT = (int) dim_D.getHeight();
-    private final double        startX          = (i_SCREEN_WIDTH / 2d);
-    private final double        startY          = (i_SCREEN_HEIGHT / 2d);
+    public static final int           LEFT                 = InputEvent.BUTTON1_DOWN_MASK;
+    public static final int           RIGHT                = InputEvent.BUTTON3_DOWN_MASK;
+    public static final double        Y_ADJUSTEMENT_FACTOR = 0.0;
+    public static final double        X_ADJUSTEMENT_FACTOR = 0.0;
+    public final        Dimension     dim_D                = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    public final        int           i_SCREEN_WIDTH       = (int) dim_D.getWidth();
+    public final        int           i_SCREEN_HEIGHT      = (int) dim_D.getHeight();
+    private final       double        startX               = (i_SCREEN_WIDTH / 2d);
+    private final       double        startY               = (i_SCREEN_HEIGHT / 2d);
     @Inject
-    private       Screen        screen;
+    private             Screen        screen;
     @Inject
-    private       MousePosition mousePosition;
+    private             MousePosition mousePosition;
     
     Mouse() throws AWTException {
+    
+    }
+    
+    public static void main(String[] args) throws AWTException {
         
+        Mouse mouse = new Mouse();
+        
+        int length = 400;
+        
+        mouse.naturalMoveTo(500, 500);
+        
+        //        for (int x = 0; x <= length; x++) {
+        //            System.out.println(mouse.getCircleHeight(length, x, 0.1));
+        //        }
     }
     
     public void clickRight() {
@@ -250,90 +264,89 @@ public class Mouse extends Peripheral {
     }
     
     public void move(int x, int y) {
-        
-        robot.mouseMove(x, y);
+    
+        //        robot.mouseMove(x, y);
+        naturalMoveTo(x, y);
         robot.delay(Constants.i_DELAY);
     }
     
     public void naturalMoveTo(int xB, int yB) {
-        
-        final int DECALAGE        = 0;
+    
+        //        Painter painter = new Painter();
+    
         final int MAXIMUM_OVERRUN = 200;
-        
-        double xA = MouseInfo.getPointerInfo().getLocation().getX() + DECALAGE;
-        double yA = MouseInfo.getPointerInfo().getLocation().getY() + DECALAGE;
-        xB += DECALAGE;
-        yB += DECALAGE;
-        
+    
+        double xA = MouseInfo.getPointerInfo().getLocation().getX();
+        double yA = MouseInfo.getPointerInfo().getLocation().getY();
+    
         boolean isLeftToRight      = xB > xA;
-        boolean overRun            = Math.random() < 0.2;
-        int     numberOfDeviations = (int) Math.ceil(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.SUP(0,001*EXP(B1*8,5);0) => 1 à 5 avec 80% de probabilité 1
-        
+        boolean isTopToBottom      = yB > yA;
+        boolean overRun            = Math.random() < 0.2d;
+        int     numberOfDeviations = (int) Math.floor(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.INF(0,001*EXP(B1*8,5);0) => 0 à 5 avec 80% de probabilité 1
+    
         System.out.println("numberOfDeviations = " + numberOfDeviations);
-        
+    
         List<Point> pointList = new ArrayList<>();
         pointList.add(new Point((int) xA,
                                 (int) yA));
-        
-        double xnA = xA;
-        double m   = (yB - yA) / (xB - xA); // y = mx + p
-        //        double mp  = -1 / m; // Perpendiculaire
-        
-        for (int index = 1; index < numberOfDeviations; index++) {
-            
-            double dxnAxB = Math.abs(xnA - xB);
-            
-            double xC = ((isLeftToRight ? 1 : -1) * (((dxnAxB - (dxnAxB * 0.25)) * Math.random() * 0.75) + (dxnAxB * 0.25))) + xnA;
-            double yC = (m * (xC - xA)) + yA;
-            Point  c  = new Point((int) xC, (int) yC);
-            pointList.add(c);
-            xnA = xC;
-        }
-        
+    
+        generateDeviationsPoints(xB, yB, xA, yA, isLeftToRight, numberOfDeviations, pointList);
+    
         System.out.println("overRun = " + overRun);
         
         if (overRun) {
             pointList.add(new Point((int) (xB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2),
                                     (int) (yB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2)));
         }
-        
-        pointList.add(new Point(xB,
-                                yB));
+    
+        pointList.add(new Point(xB, yB));
         
         System.out.println("pointList = {" + pointList.stream().map(point -> "[" + point.getX() + ", " + point.getY() + "]").collect(Collectors.joining(", ")) + "}");
-        
-        List<Point> mousePositions = new ArrayList<>();
-        mousePositions.add(pointList.get(0));
-        
-        for (int index = 1; index < pointList.size(); index++) {
-            
-            Point a = pointList.get(index - 1);
-            Point b = pointList.get(index); // y = mx + p
-            
-            for (double x = a.getX(); x < b.getX(); x += 0.01) {
-                
-                m = (b.getY() - a.getY()) / (b.getX() - a.getX());
-                
-                double y = (m * (x - a.getX())) + a.getY();
-                
-                if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(x) ||
-                    mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(y)) {
-                    
-                    //                    if (Math.random() < 0.4) { y += 2; }
-                    Point point = new Point((int) Math.floor(x), (int) Math.floor(y));
-                    mousePositions.add(point);
-                    a = point;
-                }
-            }
-        }
+    
+        List<Point> mousePositions = generateMousePositions(pointList);
         
         System.out.println("mousePositions.size() = " + mousePositions.size());
         
         mousePositions.forEach(point -> {
-            robot.mouseMove((int) point.getX() - DECALAGE,
-                            (int) point.getY() - DECALAGE);
-            robot.delay(5);
+    
+            //            Graphics g = painter.getWhiteBoardGraphics();
+            //            g.drawLine((int) point.getX(),
+            //                       (int) point.getY(),
+            //                       (int) point.getX(),
+            //                       (int) point.getY());
+            //            painter.repaintWhiteBoard();
+    
+            robot.mouseMove((int) point.getX(),
+                            (int) point.getY());
+            //            try {
+            //                Thread.sleep((long) 0.0);
+            //            }
+            //            catch (InterruptedException e) {
+            //                System.out.println("[ERROR] " + e.getMessage());
+            //            }
         });
+    }
+    
+    public void shift(int offsetX, int offsetY) {
+        
+        Point point = MouseInfo.getPointerInfo().getLocation();
+        move((int) point.getX() + offsetX, (int) point.getY() + offsetY);
+    }
+    
+    public void scrollUp(int scrollUp) {
+        
+        for (int ignore = 0; ignore < scrollUp; ignore++) {
+            robot.mouseWheel(-1);
+            robot.delay(200);
+        }
+    }
+    
+    public void scrollDown(int scrollDown) {
+        
+        for (int ignore = 0; ignore < scrollDown; ignore++) {
+            robot.mouseWheel(1);
+            robot.delay(200);
+        }
     }
     
     //        xO = xC + X cos θ
@@ -391,6 +404,81 @@ public class Mouse extends Peripheral {
     //
     //        side = -side;
     //    }
+    
+    private void generateDeviationsPoints(int xB, int yB, double xA, double yA, boolean isLeftToRight, int numberOfDeviations, List<Point> pointList) {
+        
+        double xnA = xA;
+        double m   = (yB - yA) / (xB - xA); // y = mx + p
+        //        double mp  = -1 / m; // Perpendiculaire
+        
+        for (int index = 0; index < numberOfDeviations; index++) {
+            
+            double dxnAxB = Math.abs(xnA - xB);
+            
+            double xC = ((isLeftToRight ? 1 : -1) * (((dxnAxB - (dxnAxB * 0.25)) * Math.random() * 0.75) + (dxnAxB * 0.25))) + xnA;
+            double yC = (m * (xC - xA)) + yA;
+            Point  c  = new Point((int) xC, (int) yC);
+            pointList.add(c);
+            xnA = xC;
+        }
+    }
+    
+    @NotNull
+    private List<Point> generateMousePositions(List<Point> pointList) {
+        
+        double      m, p, mPrime, pPrime, theta;
+        List<Point> mousePositions = new ArrayList<>();
+        mousePositions.add(pointList.get(0));
+        boolean top = false;
+        
+        for (int index = 1; index < pointList.size(); index++) {
+            
+            top = !top;
+            
+            Point a = pointList.get(index - 1);
+            Point b = pointList.get(index); // y = mx + p
+            
+            m = Arithmetic.getPente(a, b);
+            p = Arithmetic.getOrdonnee(a, m);
+            mPrime = -1 / m;
+            
+            if (a.getX() < b.getX()) {
+                for (double x = a.getX(); x < b.getX(); x += 0.01) {
+                    generatePositions(m, p, mPrime, mousePositions, a, b, x, top);
+                }
+            }
+            else {
+                for (double x = a.getX(); x > b.getX(); x -= 0.01) {
+                    generatePositions(m, p, mPrime, mousePositions, a, b, x, top);
+                }
+            }
+        }
+        return mousePositions;
+    }
+    
+    private void generatePositions(double m, double p, double mPrime, List<Point> mousePositions, Point a, Point b, double x, boolean top) {
+        
+        double y = m * x + p;
+        
+        Arithmetic.PrecisePoint aPrime = new Arithmetic.PrecisePoint(x, y);
+        
+        double                  distanceAB                 = Arithmetic.getDistance(a.getX(), a.getY(), b.getX(), b.getY());
+        double                  distanceAIntermediatePoint = Arithmetic.getDistance(a.getX(), a.getY(), aPrime.getX(), aPrime.getY());
+        double                  distanceFromLine           = Arithmetic.getCircleHeight(distanceAB, distanceAIntermediatePoint, 0.1);
+        Arithmetic.PrecisePoint pointAtDistanceOnLine      = Arithmetic.getPointAtDistanceOnLine(aPrime.getX(), aPrime.getY(), mPrime, distanceFromLine, top);
+        
+        //        System.out.println("m = " + m);
+        //        System.out.println("mPrime = " + mPrime);
+        //        System.out.println("m * mPrime = " + m * mPrime);
+        
+        if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(pointAtDistanceOnLine.getX()) ||
+            mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(pointAtDistanceOnLine.getY())) {
+            
+            //                    if (Math.random() < 0.4) { y += 2; }
+            //                    Point point = new Point((int) Math.floor(x), (int) Math.floor(y));
+            mousePositions.add(pointAtDistanceOnLine.toRoundedPoint());
+        }
+    }
     
     private void zoom(int steps, boolean out) {
         

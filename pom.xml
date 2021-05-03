@@ -13,32 +13,52 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <dep.annotations.version>20.1.0</dep.annotations.version>
+        <dep.commons-dbutils.version>1.7</dep.commons-dbutils.version>
+        <dep.junit-jupiter-api.version>5.6.2</dep.junit-jupiter-api.version>
+        <dep.lombok.version>1.18.4</dep.lombok.version>
+        <dep.postgresql.version>42.1.4</dep.postgresql.version>
+        <dev.guice.version>4.2.2</dev.guice.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.4</version>
+            <version>${dep.lombok.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>4.2.2</version>
+            <version>${dev.guice.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.1.4</version>
+            <version>${dep.postgresql.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/commons-dbutils/commons-dbutils -->
         <dependency>
             <groupId>commons-dbutils</groupId>
             <artifactId>commons-dbutils</artifactId>
-            <version>1.7</version>
+            <version>${dep.commons-dbutils.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${dep.annotations.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${dep.junit-jupiter-api.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

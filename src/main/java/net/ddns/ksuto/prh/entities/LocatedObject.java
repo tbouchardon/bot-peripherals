@@ -16,7 +16,7 @@ public abstract class LocatedObject {
     private int            height           = 0;
     
     public boolean hasAnyResults() {
-        
+    
         return positions.size() > 0;
     }
     
@@ -27,4 +27,9 @@ public abstract class LocatedObject {
     }
     
     public abstract String getHash();
+    
+    public int getNumberOfResults() {
+        
+        return positions.size();
+    }
 }

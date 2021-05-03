@@ -118,13 +118,19 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public AbstractSeeker<S, T> clearObjectOptimizations() {
     
         searchHistoryDatabase.clearObjectOptimization(getObjectsHash());
-        
+    
         return this;
     }
     
     public boolean hasAnyResults() {
         
         return objects.stream().anyMatch(LocatedObject::isPresent);
+    }
+    
+    public boolean hasAnyResults(String hash) {
+        
+        T object = getObjectByHash(hash);
+        return object.isPresent();
     }
     
     public boolean waitAndClick() {
@@ -151,12 +157,12 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         
         do {
             if (hasAnyResults()) {
-                objects.forEach(object -> object.getPositions().forEach(position -> click(position, object)));
+                objects.forEach(object -> object.getPositions().forEach(position -> clickRandomlyInObject(position, object)));
                 if (clickUntilDisappear) { robot.delay(1000); }
             }
         }
         while (clickUntilDisappear && clearResults().search().hasAnyResults());
-        
+    
         return this;
     }
     
@@ -164,7 +170,16 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         
         T object = getFirstResult();
         
-        if (hasAnyResults()) { click(object.getPositions().get(index - 1), object); }
+        if (hasAnyResults()) { clickRandomlyInObject(object.getPositions().get(index - 1), object); }
+        
+        return this;
+    }
+    
+    public AbstractSeeker<S, T> clickNth(int index, String hash) {
+        
+        T object = getObjectByHash(hash);
+        
+        if (hasAnyResults()) { clickRandomlyInObject(object.getPositions().get(index - 1), object); }
         
         return this;
     }
@@ -174,17 +189,17 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return clickNth(1);
     }
     
-    public AbstractSeeker<S, T> click(Position position, T object) {
-    
-        return click(position, (int) Math.floor(Math.random() * object.getWidth()), (int) Math.floor(Math.random() * object.getHeight()));
-    }
-    
-    public AbstractSeeker<S, T> click(Position position) {
+    public AbstractSeeker<S, T> clickFirst(String hash) {
         
-        return click(position, 0, 0);
+        return clickNth(1, hash);
     }
     
-    public AbstractSeeker<S, T> click(Position position, int offsetX, int offsetY) {
+    private AbstractSeeker<S, T> clickRandomlyInObject(Position position, T object) {
+        
+        return clickWithOffset(position, (int) Math.floor(Math.random() * object.getWidth()), (int) Math.floor(Math.random() * object.getHeight()));
+    }
+    
+    private AbstractSeeker<S, T> clickWithOffset(Position position, int offsetX, int offsetY) {
         
         robot.delay(clickDelay);
         robot.mouseMove(position.getX() + offsetX, position.getY() + offsetY);
@@ -211,10 +226,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 if (clickFirstResultOnly) {
     
                     T object = getFirstResult();
-                    click(object.getPositions().get(0), object);
+                    clickRandomlyInObject(object.getPositions().get(0), object);
                 }
                 else {
-                    objects.forEach(object -> object.getPositions().forEach(position -> click(position, object)));
+                    objects.forEach(object -> object.getPositions().forEach(position -> clickRandomlyInObject(position, object)));
                 }
             }
         }
