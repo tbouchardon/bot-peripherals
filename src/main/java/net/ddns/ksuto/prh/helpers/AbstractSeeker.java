@@ -59,8 +59,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     private int               iterationsToKeep           = 50;
     
     public AbstractSeeker() throws AWTException {
-        
-        //            if (Constants.DEBUG) { showObjects = new ShowObjects<>(searchZone); }
+    
     }
     
     public AbstractSeeker<S, T> debug() {
@@ -192,23 +191,6 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public AbstractSeeker<S, T> clickFirst(String hash) {
         
         return clickNth(1, hash);
-    }
-    
-    private AbstractSeeker<S, T> clickRandomlyInObject(Position position, T object) {
-        
-        return clickWithOffset(position, (int) Math.floor(Math.random() * object.getWidth()), (int) Math.floor(Math.random() * object.getHeight()));
-    }
-    
-    private AbstractSeeker<S, T> clickWithOffset(Position position, int offsetX, int offsetY) {
-        
-        robot.delay(clickDelay);
-        robot.mouseMove(position.getX() + offsetX, position.getY() + offsetY);
-        robot.delay(Constants.i_DELAY);
-        robot.mousePress(Mouse.LEFT);
-        robot.delay(Constants.i_DELAY);
-        robot.mouseRelease(Mouse.LEFT);
-        
-        return this;
     }
     
     public boolean waitAndClick(int milliseconds, boolean clickFirstResultOnly) {
@@ -453,6 +435,27 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 }
             }
         }
+    }
+    
+    private AbstractSeeker<S, T> clickRandomlyInObject(Position position, T object) {
+        
+        return clickWithOffset(position, (int) Math.floor(Math.random() * object.getWidth()), (int) Math.floor(Math.random() * object.getHeight()));
+    }
+    
+    private AbstractSeeker<S, T> clickWithOffset(Position position, int offsetX, int offsetY) {
+        
+        try {
+            robot.delay(clickDelay);
+            (new Mouse()).move(position.getX() + offsetX, position.getY() + offsetY);
+            robot.mousePress(Mouse.LEFT);
+            robot.delay(Constants.i_DELAY);
+            robot.mouseRelease(Mouse.LEFT);
+        }
+        catch (AWTException e) {
+            e.printStackTrace();
+        }
+        
+        return this;
     }
     
     private AbstractSeeker<S, T> learningSearch() {

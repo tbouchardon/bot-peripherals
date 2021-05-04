@@ -37,7 +37,7 @@ public class Mouse extends Peripheral {
     @Inject
     private             MousePosition mousePosition;
     
-    Mouse() throws AWTException {
+    public Mouse() throws AWTException {
     
     }
     
@@ -46,8 +46,8 @@ public class Mouse extends Peripheral {
         Mouse mouse = new Mouse();
         
         int length = 400;
-        
-        mouse.naturalMoveTo(500, 500);
+    
+        for (int ignore = 0; ignore < 100; ignore++) { mouse.naturalMoveTo(500 + (int) (Math.random() * 5), 500 + (int) +(Math.random() * 5)); }
         
         //        for (int x = 0; x <= length; x++) {
         //            System.out.println(mouse.getCircleHeight(length, x, 0.1));
@@ -172,8 +172,8 @@ public class Mouse extends Peripheral {
         mousePosition.waitIfUserActive();
         
         Debug.sout(x + ", " + y + ")");
-        
-        robot.mouseMove(x, y);
+    
+        naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
         clickLeft();
     }
@@ -198,8 +198,8 @@ public class Mouse extends Peripheral {
         for (int click = 0; click < numberOf; click++) {
             
             int y = (int) ((double) y1 + (((double) y2 - (double) y1) / ((double) x2 - (double) x1)) * ((double) x - (double) x1));
-            
-            robot.mouseMove(x, y);
+    
+            naturalMoveTo(x, y);
             robot.mousePress(iButtonMask);
             robot.mouseRelease(iButtonMask);
             delay(Constants.i_DELAY);
@@ -214,8 +214,8 @@ public class Mouse extends Peripheral {
         mousePosition.waitIfUserActive();
         
         Debug.sout(x + ", " + y + ")");
-        
-        robot.mouseMove(x, y);
+    
+        naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
         clickRight();
     }
@@ -265,7 +265,6 @@ public class Mouse extends Peripheral {
     
     public void move(int x, int y) {
     
-        //        robot.mouseMove(x, y);
         naturalMoveTo(x, y);
         robot.delay(Constants.i_DELAY);
     }
@@ -281,8 +280,12 @@ public class Mouse extends Peripheral {
     
         boolean isLeftToRight      = xB > xA;
         boolean isTopToBottom      = yB > yA;
-        boolean overRun            = Math.random() < 0.2d;
-        int     numberOfDeviations = (int) Math.floor(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.INF(0,001*EXP(B1*8,5);0) => 0 à 5 avec 80% de probabilité 1
+        double  distance           = Arithmetic.getDistance(xA, yA, xB, yB);
+        boolean overRun            = distance > 500 && Math.random() < 0.2d;
+        int     numberOfDeviations = 0;//(int) Math.floor(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.INF(0,001*EXP(B1*8,5);0) => 0 à 5 avec 80% de probabilité 1
+        if (distance > 500) { numberOfDeviations = Math.random() < 0.2 ? 1 : numberOfDeviations; }
+        if (distance > 1000) { numberOfDeviations = Math.random() < 0.2 ? 2 : numberOfDeviations; }
+        if (distance > 1500) { numberOfDeviations = Math.random() < 0.2 ? 3 : numberOfDeviations; }
     
         System.out.println("numberOfDeviations = " + numberOfDeviations);
     
@@ -349,62 +352,6 @@ public class Mouse extends Peripheral {
         }
     }
     
-    //        xO = xC + X cos θ
-    //        yO = yC + X sin θ
-    //
-    //        avec X déplacement positif ou négatif le long de la droite.
-    //        avec θ = angle de la droite / à l'axe
-    //        avec θ = tan-1(m)
-    //        avec m = coefficient directeur de la droite d'équation y = mx + p
-    
-    //    double teta = Math.atan(mp);
-    //
-    //    int side = 1;
-    //        for (int index = 1; index < pointList.size(); index++) {
-    //        Point a = pointList.get(index - 1);
-    //        Point b = pointList.get(index);
-    //
-    //        double dAB     = Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2));
-    //        double dCOalea = Math.random() * dAB * 0.2;
-    //        double dCO     = dAB + (dCOalea - dCOalea / 2);
-    //
-    //        // soit C le milieu de AB
-    //        double dxAxB = Math.abs(a.getX() - b.getX());
-    //        double xC    = isLeftToRight ? a.getX() + dxAxB / 2 : a.getX() - dxAxB / 2;
-    //        double yC    = (mp * (xC - a.getX())) + a.getY();
-    //
-    //        // O le futur centre du cercle
-    //        double xO = xC + dCO * side * Math.cos(teta);
-    //        double yO = yC + dCO * side * Math.sin(teta);
-    //
-    //        // la double équation cartésienne du cercle (en fait une équation pour chaque demi-cercle délimité par le diamètre horizontal) :
-    //        // y = b +- √(r²-(x-a)²)
-    //        // avec b = yO
-    //        // avec a = xO
-    //
-    //        double rayon = Math.sqrt(Math.pow(a.getX() - xO, 2) + Math.pow(a.getY() - yO, 2)); // le rayon correspond à la distance AO
-    //
-    //        for (double x = a.getX(); x < b.getX(); x += 0.01) {
-    //            double y = yO + Math.sqrt(Math.pow(rayon, 2) - Math.pow(x - xO, 2)) * -side;
-    //            //                System.out.println("[TRACE] PRH : y = " + y);
-    //            if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(x) ||
-    //                mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(y)) {
-    //                mousePositions.add(new Point((int) Math.floor(x), (int) Math.floor(y)));
-    //            }
-    //        }
-    //
-    //        System.out.println("mousePositions.size() = " + mousePositions.size());
-    //
-    //        mousePositions.forEach(point -> {
-    //            //                System.out.println("point = " + point);
-    //            robot.mouseMove((int) point.getX() - DECALAGE,
-    //                            (int) point.getY() - DECALAGE);
-    //            robot.delay(1);
-    //        });
-    //
-    //        side = -side;
-    //    }
-    
     private void generateDeviationsPoints(int xB, int yB, double xA, double yA, boolean isLeftToRight, int numberOfDeviations, List<Point> pointList) {
         
         double xnA = xA;
@@ -432,16 +379,19 @@ public class Mouse extends Peripheral {
         boolean top = false;
         
         for (int index = 1; index < pointList.size(); index++) {
-            
+    
             top = !top;
-            
+    
             Point a = pointList.get(index - 1);
             Point b = pointList.get(index); // y = mx + p
-            
+    
+            if (a.getX() == (int) b.getX()) { b.setLocation(b.getX() + 1, b.getY()); }
+            if (a.getY() == (int) b.getY()) { b.setLocation(b.getX(), b.getY() + 1); }
+    
             m = Arithmetic.getPente(a, b);
             p = Arithmetic.getOrdonnee(a, m);
             mPrime = -1 / m;
-            
+    
             if (a.getX() < b.getX()) {
                 for (double x = a.getX(); x < b.getX(); x += 0.01) {
                     generatePositions(m, p, mPrime, mousePositions, a, b, x, top);
@@ -473,10 +423,11 @@ public class Mouse extends Peripheral {
         
         if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(pointAtDistanceOnLine.getX()) ||
             mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(pointAtDistanceOnLine.getY())) {
-            
-            //                    if (Math.random() < 0.4) { y += 2; }
-            //                    Point point = new Point((int) Math.floor(x), (int) Math.floor(y));
+    
             mousePositions.add(pointAtDistanceOnLine.toRoundedPoint());
+            if (Double.isNaN(pointAtDistanceOnLine.getX()) || Double.isNaN(pointAtDistanceOnLine.getY())) {
+                System.out.println("[ERROR] Position coordinates is Not a Number !");
+            }
         }
     }
     
@@ -507,8 +458,8 @@ public class Mouse extends Peripheral {
     }
     
     private void moveAndPress(int iButtonMask, int iX_start, int iY_start, int i_delay) {
-        
-        robot.mouseMove(iX_start, iY_start);
+    
+        naturalMoveTo(iX_start, iY_start);
         robot.delay(i_delay);
         robot.mousePress(iButtonMask);
         robot.delay(i_delay);
