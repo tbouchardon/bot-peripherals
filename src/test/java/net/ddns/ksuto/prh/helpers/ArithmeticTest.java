@@ -1,6 +1,6 @@
-package net.ddns.ksuto.prh.helpers;
+package fr.ksuto.prh.helpers;
 
-import net.ddns.ksuto.prh.peripherals.Screen;
+import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
 
