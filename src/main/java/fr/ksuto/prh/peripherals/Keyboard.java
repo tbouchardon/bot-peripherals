@@ -51,10 +51,10 @@ public class Keyboard extends Peripheral {
         if (ctrl) { robot.keyPress(KeyEvent.VK_CONTROL); }
         if (shift) { robot.keyPress(KeyEvent.VK_SHIFT); }
         
-        robot.delay(Constants.i_DELAY);
+        delay(Constants.i_DELAY);
         robot.keyPress(keyEvent);
         robot.keyRelease(keyEvent);
-        robot.delay(Constants.i_DELAY);
+        delay(Constants.i_DELAY);
         
         if (shift) { robot.keyRelease(KeyEvent.VK_SHIFT); }
         if (ctrl) { robot.keyRelease(KeyEvent.VK_CONTROL); }

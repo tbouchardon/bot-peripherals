@@ -6,6 +6,7 @@ import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.entities.Position;
 import fr.ksuto.prh.entities.SearchHistory;
 import fr.ksuto.prh.peripherals.Mouse;
+import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 import fr.ksuto.prh.properties.Constants;
 import fr.ksuto.prh.tools.SearchHistoryDatabase;
@@ -164,7 +165,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         do {
             if (hasAnyResults()) {
                 objects.forEach(object -> object.getPositions().forEach(position -> clickRandomlyInObject(position, object)));
-                if (clickUntilDisappear) { robot.delay(1000); }
+                if (clickUntilDisappear) {Peripheral.delay(1000);}
             }
         }
         while (clickUntilDisappear && clearResults().search().hasAnyResults());
@@ -476,10 +477,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     private AbstractSeeker<S, T> clickWithOffset(Position position, int offsetX, int offsetY) {
         
         try {
-            robot.delay(clickDelay);
+            Peripheral.delay(clickDelay);
             (new Mouse()).move(position.getX() + offsetX, position.getY() + offsetY);
             robot.mousePress(Mouse.LEFT);
-            robot.delay(Constants.i_DELAY);
+            Peripheral.delay(Constants.i_DELAY);
             robot.mouseRelease(Mouse.LEFT);
         }
         catch (AWTException e) {
@@ -495,16 +496,16 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
     
     private AbstractSeeker<S, T> search(boolean learningSearch) {
-        
-        robot.delay(searchDelay);
-        
+    
+        Peripheral.delay(searchDelay);
+    
         boolean hidedObjects = false;
-        
+    
         if (showObjects != null && showObjects.isVisible()) {
             //                showObjects.setVisible(false);
             hidedObjects = true;
         }
-        
+    
         BufferedImage capturedScreen = robot.createScreenCapture(searchZone.getRectangle());
         
         if (debug) {

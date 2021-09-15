@@ -3,6 +3,7 @@ package fr.ksuto.prh;
 import fr.ksuto.prh.peripherals.Keyboard;
 import fr.ksuto.prh.peripherals.Mouse;
 import fr.ksuto.prh.peripherals.MousePosition;
+import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
@@ -27,6 +28,11 @@ public class PeripheralRobotHelper {
     private Keyboard      keyboard;
     
     public PeripheralRobotHelper() throws AWTException {}
+    
+    public static void delay(long ms) {
+        
+        Peripheral.delay(ms);
+    }
     
     public Keyboard getKeyboard() {
         

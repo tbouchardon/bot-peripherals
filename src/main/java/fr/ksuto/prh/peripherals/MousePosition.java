@@ -102,7 +102,7 @@ public class MousePosition {
                 }
                 
                 countDown.setText(String.valueOf(i));
-                robot.delay(1000);
+                Peripheral.delay(1000);
             }
             
             frame.dispose();

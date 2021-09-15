@@ -11,8 +11,18 @@ public class Peripheral {
     
     Peripheral() throws AWTException {}
     
-    void delay(int ms) {
+    public static void delay(int ms) {
         
-        robot.delay(ms);
+        delay((long) ms);
+    }
+    
+    public static void delay(long ms) {
+        
+        long first  = System.nanoTime();
+        long second = System.nanoTime();
+        
+        while (second - first < ms * 1000000) {
+            second = System.nanoTime();
+        }
     }
 }

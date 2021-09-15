@@ -1,8 +1,11 @@
 package fr.ksuto.prh;
 
+import fr.ksuto.prh.peripherals.Peripheral;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import com.google.inject.Guice;
 import com.google.inject.Inject;
 
 public class Tests {
@@ -24,10 +26,29 @@ public class Tests {
     PeripheralRobotHelper robotHelper;
     
     public static void main(String[] args) throws AWTException {
-        
-        Tests tests = Guice.createInjector().getInstance(Tests.class);
-        tests.robotHelper.getMouse().move(200, 200);
-        tests.naturalMove();
+    
+        int        i     = 0;
+        List<Long> times = new ArrayList<>();
+        times.add(0l);
+        times.add(0l);
+        long first  = System.nanoTime();
+        long second = System.nanoTime();
+    
+        while (second - first < 50000) {
+            i++;
+            second = System.nanoTime();
+            times.add(second - first);
+        }
+    
+        System.out.println("i = " + i);
+        System.out.println("first = " + first);
+        System.out.println("second = " + second);
+        System.out.println("second - first = " + (second - first));
+        System.out.println(times);
+    
+        //        Tests tests = Guice.createInjector().getInstance(Tests.class);
+        //        tests.robotHelper.getMouse().move(200, 200);
+        //        tests.naturalMove();
     }
     
     private void naturalMove() throws AWTException {
@@ -100,7 +121,7 @@ public class Tests {
     private String getMouseHex(int delay) throws AWTException {
         
         Robot robot = new Robot();
-        robot.delay(delay);
+        Peripheral.delay(delay);
         Color pixelColor = robot.getPixelColor(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y);
         System.out.print(pixelColor);
         String formatedColor = String.format("#%02x%02x%02x", pixelColor.getRed(), pixelColor.getGreen(), pixelColor.getBlue());

@@ -2,6 +2,7 @@ package fr.ksuto.prh.tools;
 
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Position;
+import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
@@ -75,7 +76,7 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
             }
             showObjects.setLocatedObjects(locatedObjectlist);
             Robot robot = new Robot();
-            robot.delay(25);
+            Peripheral.delay(25);
         }
     }
     

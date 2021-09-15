@@ -2,6 +2,7 @@ package fr.ksuto.prh.helpers;
 
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Parameter;
+import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
@@ -29,7 +30,7 @@ public class PictureHelper {
         
         for (int countDown = 5; countDown >= 0; countDown--) {
             System.out.println("[TRACE] PRH : countDown = " + countDown);
-            robot.delay(1000);
+            Peripheral.delay(1000);
         }
         
         if (learn) {

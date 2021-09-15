@@ -42,15 +42,15 @@ public class Screen extends Peripheral {
         
         while (pictureSearch.getObjects().get(0).getPositions().size() < 10) {
             pictureSearch.search();
-            pictureSearch.robot.delay(1000);
+            delay(1000);
             showObjects.setLocatedObjects(pictureSearch.getObjects());
             precision++;
         }
     }
     
     public void waitUntilStopsMoving() {
-        
-        while (isMoving()) {robot.delay(200);}
+    
+        while (isMoving()) {delay(200);}
     }
     
     public int numberOfChangedZones(BufferedImage image1, BufferedImage image2, List<Zone> zones) {
@@ -94,7 +94,7 @@ public class Screen extends Peripheral {
         long startTime = System.currentTimeMillis();
         
         do {
-            robot.delay(msDelay == null ? 250 : msDelay);
+            delay(msDelay == null ? 250 : msDelay);
             image2 = robot.createScreenCapture(Zone.ALL.getRectangle());
             
             if (debug) { writeImage(image2, System.currentTimeMillis() + "_comparingTo"); }
@@ -148,8 +148,8 @@ public class Screen extends Peripheral {
         int initialPixelColor1 = screenCapture.getRGB(screenCapture.getWidth() / 2 - 100, screenCapture.getHeight() / 2 - 100);
         int initialPixelColor2 = screenCapture.getRGB(screenCapture.getWidth() / 2, screenCapture.getHeight() / 2);
         int initialPixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
-        
-        robot.delay(200);
+    
+        delay(200);
     
         screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
     
