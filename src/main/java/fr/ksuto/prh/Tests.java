@@ -31,7 +31,9 @@ public class Tests {
     }
     
     private void naturalMove() throws AWTException {
-        
+    
+        for (int i = 0; i < 100; i++) { System.out.println((int) Math.floor(Math.random() * 2 + 0.5)); }
+    
         robotHelper.getMouse().naturalMoveTo(500, 500);
     }
     

@@ -1,5 +1,6 @@
 package fr.ksuto.prh.helpers;
 
+import fr.ksuto.prh.entities.AbstractPictureEnum;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.entities.Position;
 
@@ -31,11 +32,11 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         return isPictureFound(capturedScreen, object, currentPosition);
     }
     
-    public static PictureSearch getDefault(String url) throws AWTException {
+    public static PictureSearch getDefault(AbstractPictureEnum pictureEnum) throws AWTException {
         
         PictureSearch pictureSearch = new PictureSearch();
         
-        if (url != null) { pictureSearch.addPictureWithUrl(url); }
+        if (pictureEnum != null) { pictureSearch.addPictureWithUrl(pictureEnum.getUrl()); }
         
         pictureSearch
                 .setPrecision(20)

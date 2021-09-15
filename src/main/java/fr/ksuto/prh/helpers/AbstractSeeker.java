@@ -1,5 +1,6 @@
 package fr.ksuto.prh.helpers;
 
+import fr.ksuto.prh.entities.AbstractPictureEnum;
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.entities.Position;
@@ -132,9 +133,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return objects.stream().map(LocatedObject::getNumberOfResults).mapToInt(Integer::intValue).sum();
     }
     
-    public boolean hasAnyResults(String hash) {
+    public boolean hasAnyResults(AbstractPictureEnum pictureEnum) {
         
-        T object = getObjectByHash(hash);
+        T object = getObject(pictureEnum);
         return object.isPresent();
     }
     
@@ -180,9 +181,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
     
-    public AbstractSeeker<S, T> clickNth(int index, String hash) {
+    public AbstractSeeker<S, T> clickNth(int index, AbstractPictureEnum pictureEnum) {
         
-        T object = getObjectByHash(hash);
+        T object = getObject(pictureEnum);
         
         if (hasAnyResults()) { clickRandomlyInObject(object.getPositions().get(index - 1), object); }
         
@@ -194,9 +195,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return clickNth(1);
     }
     
-    public AbstractSeeker<S, T> clickFirst(String hash) {
+    public AbstractSeeker<S, T> clickFirst(AbstractPictureEnum pictureEnum) {
         
-        return clickNth(1, hash);
+        return clickNth(1, pictureEnum);
     }
     
     public boolean waitAndClick(int milliseconds, boolean clickFirstResultOnly) {
@@ -362,10 +363,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return seeker;
     }
     
-    public T getObjectByHash(String hash) {
+    public T getObject(AbstractPictureEnum pictureEnum) {
         
         for (T object : getObjects()) {
-            if (object.getHash().equals(hash)) { return object; }
+            if (object.getHash().equals(pictureEnum.getHash())) { return object; }
         }
         
         return null;

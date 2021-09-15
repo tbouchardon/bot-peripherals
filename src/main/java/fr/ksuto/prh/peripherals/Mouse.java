@@ -272,7 +272,7 @@ public class Mouse extends Peripheral {
     
         //        Painter painter = new Painter();
     
-        final int MAXIMUM_OVERRUN = 200;
+        int maximumOverRun = 200;
     
         double xA = MouseInfo.getPointerInfo().getLocation().getX();
         double yA = MouseInfo.getPointerInfo().getLocation().getY();
@@ -280,7 +280,7 @@ public class Mouse extends Peripheral {
         boolean isLeftToRight      = xB > xA;
         boolean isTopToBottom      = yB > yA;
         double  distance           = Arithmetic.getDistance(xA, yA, xB, yB);
-        boolean overRun            = distance > 500 && Math.random() < 0.2d;
+        int     numberOfOverRun    = (int) Math.floor(Math.random() * 2 + 0.5);
         int     numberOfDeviations = 0;//(int) Math.floor(0.001 * Math.exp(Math.random() * 8.5)); //Excel = ARRONDI.INF(0,001*EXP(B1*8,5);0) => 0 à 5 avec 80% de probabilité 1
         if (distance > 500) { numberOfDeviations = Math.random() < 0.2 ? 1 : numberOfDeviations; }
         if (distance > 1000) { numberOfDeviations = Math.random() < 0.2 ? 2 : numberOfDeviations; }
@@ -294,11 +294,12 @@ public class Mouse extends Peripheral {
     
         generateDeviationsPoints(xB, yB, xA, yA, isLeftToRight, numberOfDeviations, pointList);
     
-        //        System.out.println("overRun = " + overRun);
+        //        System.out.println("numberOfOverRun = " + numberOfOverRun);
     
-        if (overRun) {
-            pointList.add(new Point((int) (xB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2),
-                                    (int) (yB + (Math.random() * MAXIMUM_OVERRUN) - MAXIMUM_OVERRUN / 2)));
+        for (int i = 0; i < numberOfOverRun; i++) {
+            pointList.add(new Point((int) (xB + (Math.random() * maximumOverRun) - maximumOverRun / 2),
+                                    (int) (yB + (Math.random() * maximumOverRun) - maximumOverRun / 2)));
+            maximumOverRun = maximumOverRun / 2;
         }
     
         pointList.add(new Point(xB, yB));
@@ -309,24 +310,35 @@ public class Mouse extends Peripheral {
     
         //        System.out.println("mousePositions.size() = " + mousePositions.size());
     
-        mousePositions.forEach(point -> {
-        
-            //            Graphics g = painter.getWhiteBoardGraphics();
-            //            g.drawLine((int) point.getX(),
-            //                       (int) point.getY(),
-            //                       (int) point.getX(),
-            //                       (int) point.getY());
-            //            painter.repaintWhiteBoard();
+        double  increment     = 0.0;
+        double  incrementStep = 0.001;
+        double  counter       = 0.0;
+        double  threshold     = 1;
+        boolean shouldSleep   = true;
+    
+        for (int i = 0, mousePositionsSize = mousePositions.size(); i < mousePositionsSize; i++) {
+            Point point = mousePositions.get(i);
         
             robot.mouseMove((int) point.getX(),
                             (int) point.getY());
-            //            try {
-            //                Thread.sleep((long) 0.0);
-            //            }
-            //            catch (InterruptedException e) {
-            //                System.out.println("[ERROR] " + e.getMessage());
-            //            }
-        });
+        
+            if (mousePositions.size() - i < 666) {
+            
+                increment += incrementStep;
+                counter += increment;
+                shouldSleep = counter > threshold;
+            
+                if (shouldSleep) {
+                    counter = 0;
+                    try {
+                        Thread.sleep(1);
+                    }
+                    catch (InterruptedException e) {
+                        System.out.println("[ERROR] " + e.getMessage());
+                    }
+                }
+            }
+        }
     }
     
     public void shift(int offsetX, int offsetY) {
