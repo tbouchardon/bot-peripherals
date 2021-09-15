@@ -300,20 +300,17 @@ public class Mouse extends Peripheral {
     
         //        System.out.println("mousePositions.size() = " + mousePositions.size());
     
-        int     slowDownStartingPoint = 666;
-        double  increment             = 0.0;
-        double  incrementStep         = 0.001;
-        double  counter               = 0.0;
-        double  threshold             = 1;
-        boolean shouldSleep;
+        int    slowDownStartingPoint = 666;
+        double increment             = 0.0;
+        double incrementStep         = 0.000005;
+        double duration              = 0.0;
+        double threshold             = 1;
     
         if (mousePositions.size() < slowDownStartingPoint) {
             for (int i = mousePositions.size(); i < slowDownStartingPoint; i++) {
             
-                increment += incrementStep;
-                counter += increment;
-                shouldSleep = counter > threshold;
-                if (shouldSleep) {counter = 0;}
+                increment += incrementStep / 2;
+                duration += increment;
             }
         }
     
@@ -326,18 +323,10 @@ public class Mouse extends Peripheral {
             if (mousePositions.size() - i < slowDownStartingPoint) {
             
                 increment += incrementStep;
-                counter += increment;
-                shouldSleep = counter > threshold;
-                if (shouldSleep) {counter = 0;}
+                duration += increment;
+                if (duration > 1) {duration = 1;}
             
-                if (shouldSleep) {
-                    try {
-                        Thread.sleep(1);
-                    }
-                    catch (InterruptedException e) {
-                        System.out.println("[ERROR] " + e.getMessage());
-                    }
-                }
+                delay(duration);
             }
         }
     }

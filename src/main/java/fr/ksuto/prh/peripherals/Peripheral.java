@@ -13,10 +13,10 @@ public class Peripheral {
     
     public static void delay(int ms) {
         
-        delay((long) ms);
+        delay((double) ms);
     }
     
-    public static void delay(long ms) {
+    public static void delay(double ms) {
         
         long first  = System.nanoTime();
         long second = System.nanoTime();
