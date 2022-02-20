@@ -84,18 +84,17 @@ public abstract class AbstractSQLiteDatabase {
     }
     
     public ResultSet queryWithStatement(String query) {
+    
+        try (Connection connection = DriverManager.getConnection(this.url);
+             Statement statement = connection.createStatement()) {
         
-        try (Connection connection = DriverManager.getConnection(this.url)) {
-            
-            Statement statement = connection.createStatement();
-            
-            if (query.toLowerCase().startsWith("select")) { return statement.executeQuery(query); }
-            else { statement.executeUpdate(query); }
+            if (query.toLowerCase().startsWith("select")) {return statement.executeQuery(query);}
+            else {statement.executeUpdate(query);}
         }
         catch (SQLException e) {
             System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
         }
-        
+    
         return null;
     }
     

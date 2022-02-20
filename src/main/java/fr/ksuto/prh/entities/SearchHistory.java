@@ -1,11 +1,11 @@
 package fr.ksuto.prh.entities;
 
+import fr.ksuto.prh.tools.RandomUtils;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 @Data
 public class SearchHistory {
@@ -24,7 +24,7 @@ public class SearchHistory {
     
     public SearchHistory(String hash) {
     
-        this.id = Math.abs(new Random().nextLong());
+        this.id = new RandomUtils().getPositiveLong();
         this.hash = hash;
     }
     
@@ -42,8 +42,8 @@ public class SearchHistory {
         }
         
         public Position(Integer position_x, Integer position_y) {
-            
-            this.id = Math.abs(new Random().nextLong());
+    
+            this.id = new RandomUtils().getPositiveLong();
             this.position_x = position_x;
             this.position_y = position_y;
         }
@@ -62,8 +62,8 @@ public class SearchHistory {
         public Area() { }
         
         public Area(Integer x_1, Integer x_2, Integer y_1, Integer y_2) {
-            
-            this.id = Math.abs(new Random().nextLong());
+    
+            this.id = new RandomUtils().getPositiveLong();
             this.x_1 = x_1;
             this.x_2 = x_2;
             this.y_1 = y_1;
@@ -83,8 +83,8 @@ public class SearchHistory {
         public Parameter() { }
         
         public Parameter(String hash) {
-            
-            this.id = Math.abs(new Random().nextLong());
+    
+            this.id = new RandomUtils().getPositiveLong();
             this.object_hash = hash;
         }
     }

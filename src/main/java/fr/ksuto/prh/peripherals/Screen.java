@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,11 +22,12 @@ import javax.imageio.ImageIO;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Screen extends Peripheral {
     
-    public static final Dimension dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    public static final int       SCREEN_WIDTH  = (int) dim_D.getWidth();
-    public static final int       SCREEN_HEIGHT = (int) dim_D.getHeight();
-    public final        int       iX_START      = Screen.SCREEN_WIDTH / 2, iY_START = Screen.SCREEN_HEIGHT / 2 - 20;
-    private ColorChecker colorChecker;
+    public static final Dimension    dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    public static final int          SCREEN_WIDTH  = (int) dim_D.getWidth();
+    public static final int          SCREEN_HEIGHT = (int) dim_D.getHeight();
+    public static final int          X_START       = Screen.SCREEN_WIDTH / 2;
+    public static final int          Y_START       = Screen.SCREEN_HEIGHT / 2 - 20;
+    private             ColorChecker colorChecker;
     
     Screen() throws AWTException {
     
@@ -77,17 +79,17 @@ public class Screen extends Peripheral {
         return false;
     }
     
-    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds) throws Exception {
+    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds) {
         
         waitUntilHasChanged(zones, msDelay, zoneEnum, maxWaitingMilliseconds, false);
     }
     
-    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds, boolean debug) throws Exception {
+    public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds, boolean debug) {
         
         BufferedImage image1 = robot.createScreenCapture(Zone.ALL.getRectangle());
         BufferedImage image2;
         
-        if (debug) { writeImage(image1, System.currentTimeMillis() + "_base"); }
+        if (debug) {writeImage(image1, System.currentTimeMillis() + "_base");}
         
         int numberOfChangedZones;
         
@@ -109,22 +111,22 @@ public class Screen extends Peripheral {
                !(zoneEnum == ZoneEnum.ANY && numberOfChangedZones > 0));
     }
     
-    public void waitUntilHasChanged(Zone zone) throws Exception {
+    public void waitUntilHasChanged(Zone zone) {
         
         waitUntilHasChanged(Collections.singletonList(zone), 250, ZoneEnum.ALL, null);
     }
     
-    public void waitUntilHasChanged(Zone zone, Integer maxWaitingMilliseconds) throws Exception {
+    public void waitUntilHasChanged(Zone zone, Integer maxWaitingMilliseconds) {
         
         waitUntilHasChanged(Collections.singletonList(zone), 250, ZoneEnum.ALL, maxWaitingMilliseconds);
     }
     
-    public void waitUntilHasChanged(List<Zone> zones) throws Exception {
+    public void waitUntilHasChanged(List<Zone> zones) {
         
         waitUntilHasChanged(zones, 250, ZoneEnum.ALL, null);
     }
     
-    public void waitUntilAnyHasChanged(List<Zone> zones) throws Exception {
+    public void waitUntilAnyHasChanged(List<Zone> zones) {
         
         waitUntilHasChanged(zones, 250, ZoneEnum.ANY, null);
     }
@@ -136,7 +138,6 @@ public class Screen extends Peripheral {
             ImageIO.write(bi, "jpg", outputfile);
         }
         catch (IOException e) {
-            // TODO : Catcher cette exception correctement !
             e.printStackTrace();
         }
     }
@@ -158,7 +159,7 @@ public class Screen extends Peripheral {
         int pixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
     
         return pixelColor1 != initialPixelColor1 &&
-               pixelColor2 != initialPixelColor2; //|| pixelColor3 == initialPixelColor3;
+               pixelColor2 != initialPixelColor2;
     }
     
     public enum ZoneEnum {
@@ -166,11 +167,7 @@ public class Screen extends Peripheral {
     }
     
     @Data
-    public static class Zone {
-        
-        //        public static final Dimension dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-        //        public static final int       Screen.SCREEN_WIDTH  = (int) dim_D.getWidth();
-        //        public static final int       Screen.SCREEN_HEIGHT = (int) dim_D.getHeight();
+    public static class Zone implements Serializable {
         
         public static final Zone TOP          = new Zone(0, Screen.SCREEN_WIDTH, 0, Screen.SCREEN_HEIGHT / 2);
         public static final Zone TOP_LEFT     = new Zone(0, Screen.SCREEN_WIDTH / 2, 0, Screen.SCREEN_HEIGHT / 2);

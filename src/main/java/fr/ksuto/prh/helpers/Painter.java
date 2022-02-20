@@ -15,12 +15,14 @@ public class Painter extends JFrame {
     private final Dimension   dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
     private final int         SCREEN_WIDTH  = (int) dim_D.getWidth();
     private final int         SCREEN_HEIGHT = (int) dim_D.getHeight();
+    private       boolean     hasBorders    = true;
     private       WhiteBoard  whiteBoard;
     private       Screen.Zone zone;
     private       String      title         = "";
     
-    public Painter() {
+    public Painter(boolean hasBorders) {
         
+        this.hasBorders = hasBorders;
         init(Screen.Zone.ALL);
     }
     
@@ -68,7 +70,6 @@ public class Painter extends JFrame {
         BufferedImage image = new BufferedImage(zone.getWidth(), zone.getHeight(), BufferedImage.TYPE_INT_ARGB);
         
         public WhiteBoard() {
-            
             setOpaque(false);
         }
         
@@ -82,7 +83,7 @@ public class Painter extends JFrame {
             
             g2d.setColor(Color.MAGENTA);
             g2d.setStroke(new BasicStroke(4f));
-            g2d.drawRect(zone.getXMin(), zone.getYMin(), zone.getWidth(), zone.getHeight());
+            if (hasBorders) {g2d.drawRect(zone.getXMin(), zone.getYMin(), zone.getWidth(), zone.getHeight());}
             
             g2d.drawString(title,
                            zone.getXMin() + 5,

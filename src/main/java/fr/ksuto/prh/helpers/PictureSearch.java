@@ -55,6 +55,23 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         return this;
     }
     
+    public PictureSearch addPicture(AbstractPictureEnum pictureEnum, Object o) {
+        
+        Picture picture = new Picture(pictureEnum.getUrl());
+        picture.setObject(o);
+        
+        objects.add(picture);
+        
+        return this;
+    }
+    
+    public PictureSearch addPicture(AbstractPictureEnum pictureEnum) {
+        
+        this.objects.add(new Picture(pictureEnum.getUrl()));
+        
+        return this;
+    }
+    
     public PictureSearch addPictureWithUrl(String url) {
         
         this.objects.add(new Picture(url));
@@ -84,7 +101,7 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         int    tempCapturedRGB;
         int    refRGB      = picture.getReferenceImage().getRGB(0, 0);
         int    capturedRGB = capturedScreen.getRGB(currentPosition.getX(), currentPosition.getY());
-        double area        = picture.getReferenceImage().getHeight() * picture.getReferenceImage().getWidth();
+        double area        = (double) picture.getReferenceImage().getHeight() * (double) picture.getReferenceImage().getWidth();
         double errorNumber = 0;
         
         boolean found = false;

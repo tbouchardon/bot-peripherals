@@ -3,6 +3,7 @@ package fr.ksuto.prh.peripherals;
 import fr.ksuto.prh.tools.Debug;
 
 import java.awt.*;
+import java.util.Objects;
 
 import javax.swing.*;
 
@@ -34,18 +35,23 @@ public class MousePosition {
     //        this.yPos = yPos;
     //    }
     
-    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object other) {
     
-        if (other == null) { return false; }
-        if (other == this) { return true; }
-        if (!(other instanceof MousePosition)) { return false; }
-        
+        if (other == null) {return false;}
+        if (other == this) {return true;}
+        if (!(other instanceof MousePosition)) {return false;}
+    
         //noinspection UnnecessaryLocalVariable
         boolean hasMoved = (xPos != ((MousePosition) other).xPos) || (yPos != ((MousePosition) other).yPos);
-        
+    
         return hasMoved;
+    }
+    
+    @Override
+    public int hashCode() {
+        
+        return Objects.hash(xPos, yPos);
     }
     
     public void updateMousePosition() {
@@ -56,7 +62,7 @@ public class MousePosition {
     }
     
     public boolean hasMoved() {
-    
+        
         Point point = MouseInfo.getPointerInfo().getLocation();
     
         return point.x == this.xPos && point.y == this.yPos;

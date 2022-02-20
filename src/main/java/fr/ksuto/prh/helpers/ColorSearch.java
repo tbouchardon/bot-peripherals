@@ -51,24 +51,21 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     private boolean isBlockFound(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
-        
-        if (currentPosition.getY() >= capturedScreen.getHeight()) { return false; }
-        if (currentPosition.getX() >= capturedScreen.getWidth()) { return false; }
-        
-        int b;
-        int g;
-        int r;
-        int xDelta    = 0;
-        int yDelta    = 0;
+    
+        if (currentPosition.getY() >= capturedScreen.getHeight()) {return false;}
+        if (currentPosition.getX() >= capturedScreen.getWidth()) {return false;}
+    
+        int r, g, b;
+        int xDelta    = 0, yDelta = 0;
         int blockSize = 0;
-        
+    
         while (true) {
-            
+        
             int capturedRGB = capturedScreen.getRGB(currentPosition.getX() + xDelta, currentPosition.getY() + yDelta);
             b = (capturedRGB) & 0xFF;
             g = (capturedRGB >> 8) & 0xFF;
             r = (capturedRGB >> 16) & 0xFF;
-            
+        
             boolean match;
             if (precision != null) {
                 
@@ -98,10 +95,10 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
                 
                 xDelta = 0;
                 yDelta++;
-                if (currentPosition.getY() >= capturedScreen.getHeight()) { break; }
+                if (currentPosition.getY() >= capturedScreen.getHeight()) {break;}
             }
         }
-        if (blockSize > colorBlock.getSize()) { colorBlock.setSize(blockSize); }
+        if (blockSize > colorBlock.getSize()) {colorBlock.setSize(blockSize);}
         
         currentPosition.setObject(blockSize);
         

@@ -91,16 +91,16 @@ public abstract class AbstractPostgresDatabase {
     
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
     
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres");
+             Statement statement = connection.createStatement()) {
         
             //            System.out.println("[TRACE] PRH : Connected to PostgreSQL database!");
         
-            Statement statement = connection.createStatement();
             //            System.out.println("[TRACE] PRH : Reading objects records...");
             //            System.out.printf("%-30.30s  %-30.30s%n", "Id", "X Position");
         
-            if (query.toLowerCase().startsWith("select")) { return statement.executeQuery(query); }
-            else { statement.executeUpdate(query); }
+            if (query.toLowerCase().startsWith("select")) {return statement.executeQuery(query);}
+            else {statement.executeUpdate(query);}
         
             //            while (resultSet.next()) {
             //                System.out.printf("%-30.30s  %-30.30s%n", resultSet.getString("id"), resultSet.getString("hash"));

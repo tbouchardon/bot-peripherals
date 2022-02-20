@@ -30,8 +30,8 @@ public class Tests {
     
         int        i     = 0;
         List<Long> times = new ArrayList<>();
-        times.add(0l);
-        times.add(0l);
+        times.add(0L);
+        times.add(0L);
         long first  = System.nanoTime();
         long second = System.nanoTime();
     
