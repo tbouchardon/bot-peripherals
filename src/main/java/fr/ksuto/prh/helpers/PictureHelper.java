@@ -84,9 +84,10 @@ public class PictureHelper {
         }
         
         if (top10BestParameters.isEmpty()) {
-            System.out.println("[INFO] PRH : No perfect parameters found, closest id :");
-            System.out.println("[INFO] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
-                               " " + numberOfMatches);
+            System.out.println("[INFO] PRH : ");
+            System.out.println("[INFO] PRH : No perfect parameters found, closest match :");
+            System.out.println("[INFO] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
+                               ", found " + closestParametersMatches + "/" + " " + numberOfMatches);
         }
         //        if (seeker.hasAnyResults()) {
         //            System.out.println("[TRACE] PRH : Positions : ");
