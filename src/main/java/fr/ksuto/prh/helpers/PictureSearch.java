@@ -14,6 +14,24 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         super();
     }
     
+    public PictureSearch findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
+        
+        setShowTargets(true);
+        setTracking(true);
+        debug();
+        
+        PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
+        
+        clean();
+        
+        return this;
+    }
+    
+    public PictureSearch findWorkingParameters(int numberOfMatches) {
+        
+        return findWorkingParameters(numberOfMatches, 1);
+    }
+    
     @Override
     boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, Picture object) {
         
@@ -91,22 +109,6 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         for (String url : urls) {addPictureWithUrl(url);}
         
         return this;
-    }
-    
-    public void findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
-        
-        setShowTargets(true);
-        setTracking(true);
-        debug();
-        
-        PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
-        
-        clean();
-    }
-    
-    public void findWorkingParameters(int numberOfMatches) {
-        
-        findWorkingParameters(numberOfMatches, 1);
     }
     
     private boolean isPictureFound(BufferedImage capturedScreen, Picture picture, Position currentPosition) {

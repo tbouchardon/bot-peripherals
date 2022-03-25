@@ -323,16 +323,20 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public AbstractSeeker<S, T> search() {
         
         if (!searchZones.isEmpty()) {
-            
+    
             for (Screen.Zone zone : searchZones) {
                 searchZone = zone;
                 search(false);
             }
         }
         else {search(false);}
-        
+    
         return this;
     }
+    
+    abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops);
+    
+    abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches);
     
     public AbstractSeeker<S, T> showObjects() {
         

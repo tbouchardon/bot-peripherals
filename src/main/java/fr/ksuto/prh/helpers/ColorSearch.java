@@ -14,6 +14,20 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     @Override
+    AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
+        
+        System.out.println("[ERROR] PRH : Method not implemented !");
+        
+        return null;
+    }
+    
+    @Override
+    AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches) {
+        
+        return findWorkingParameters(numberOfMatches, 1);
+    }
+    
+    @Override
     boolean searchObject(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
         
         if (isBlockFound(capturedScreen, currentPosition, colorBlock)) {
