@@ -193,12 +193,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return seeker;
     }
     
-    public AbstractSeeker<S, T> debug() {
-        
-        this.debug = true;
-        showObjects = initShowObjects(false);
-        return this;
-    }
+    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops);
+    
+    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches);
     
     public T getObject(AbstractPictureEnum pictureEnum) {
         
@@ -334,13 +331,24 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
     
-    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops);
-    
-    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches);
-    
     public AbstractSeeker<S, T> showObjects() {
         
         if (showObjects != null) {showObjects.setVisible(true);}
+        return this;
+    }
+    
+    public AbstractSeeker<S, T> startDebug() {
+        
+        this.debug = true;
+        this.showObjects = initShowObjects(false);
+        return this;
+    }
+    
+    public AbstractSeeker<S, T> stopDebug() {
+        
+        this.debug = false;
+        clean();
+        this.showObjects = null;
         return this;
     }
     
@@ -456,7 +464,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                     currentPosition.setX(Math.max(0, position.getX() - exclusiveZone - maximumMovement));
                     for (; currentPosition.getX() < position.getX() + object.getWidth() + exclusiveZone + maximumMovement &&
                            currentPosition.getX() < capturedScreen.getWidth(); currentPosition.incX()) {
-            
+    
                         objectFound = isObjectFound(capturedScreen, currentPosition, object);
                         
                         if (objectFound) {

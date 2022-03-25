@@ -1,6 +1,7 @@
 package fr.ksuto.prh.helpers;
 
 import fr.ksuto.prh.entities.AbstractPictureEnum;
+import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.entities.Position;
 
@@ -15,15 +16,20 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     }
     
     public PictureSearch findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
-        
+    
         setShowTargets(true);
         setTracking(true);
-        debug();
-        
-        PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
-        
-        clean();
-        
+        startDebug();
+    
+        Parameter workingParameters = PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
+    
+        setShowTargets(false);
+        setTracking(false);
+        stopDebug();
+    
+        setPrecision(workingParameters.getPrecision());
+        setAllowedErrorRate(workingParameters.getErrorRate());
+    
         return this;
     }
     

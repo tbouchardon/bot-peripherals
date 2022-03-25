@@ -16,15 +16,15 @@ public class PictureHelper {
     
     public PictureHelper() throws AWTException {}
     
-    public static void findWorkingParameters(int numberOfMatches, AbstractSeeker seeker, int numberOfNoChangeLoops) {
-        
+    public static Parameter findWorkingParameters(int numberOfMatches, AbstractSeeker seeker, int numberOfNoChangeLoops) {
+    
         java.util.List<Parameter> parameters = new ArrayList<>();
         for (double e = 0.0; e <= 0.30; e += 0.05) {
             for (int p = 0; p < 66; p += 5) {
                 parameters.add(new Parameter(p, e));
             }
         }
-        
+    
         List<LocatedObject> objects = seeker.getObjects();
         
         java.util.List<Parameter> top10BestParameters      = new ArrayList<>();
@@ -82,12 +82,16 @@ public class PictureHelper {
                 }
             }
         }
-        
+    
+        System.out.println("[INFO] PRH : ");
         if (top10BestParameters.isEmpty()) {
-            System.out.println("[INFO] PRH : ");
-            System.out.println("[INFO] PRH : No perfect parameters found, closest match :");
-            System.out.println("[INFO] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
+            System.out.println("[WARN] PRH : No perfect parameters found, closest match :");
+            System.out.println("[WARN] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
                                ", found " + closestParametersMatches + "/" + " " + numberOfMatches);
+        }
+        else {
+            System.out.println("[SUCCESS] PRH : best match :");
+            System.out.println("[WARN] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
         }
         //        if (seeker.hasAnyResults()) {
         //            System.out.println("[TRACE] PRH : Positions : ");
@@ -95,6 +99,7 @@ public class PictureHelper {
         //                System.out.println(position.getX() + ":" + position.getY());
         //            });
         //        }
+        return closestParameters;
     }
     
     public void pictureHelper(String url, int numberOfMatches, boolean learn) throws AWTException {
@@ -120,7 +125,7 @@ public class PictureHelper {
                     .setSearchZone(searchZone)
                     .setShowTargets(true)
                     .setTracking(true)
-                    .debug()
+                    .startDebug()
                     .learn(numberOfMatches)
                     .optimize()
                     .search();
@@ -133,7 +138,7 @@ public class PictureHelper {
                     .setSearchZone(searchZone)
                     .setShowTargets(true)
                     .setTracking(true)
-                    .debug();
+                    .startDebug();
             
             findWorkingParameters(numberOfMatches, pictureSearch, Integer.MAX_VALUE);
             
