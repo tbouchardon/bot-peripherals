@@ -334,9 +334,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
     
-    abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops);
+    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops);
     
-    abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches);
+    public abstract AbstractSeeker<S, T> findWorkingParameters(int numberOfMatches);
     
     public AbstractSeeker<S, T> showObjects() {
         

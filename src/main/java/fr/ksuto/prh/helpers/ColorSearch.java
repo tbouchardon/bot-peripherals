@@ -14,15 +14,15 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     @Override
-    AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
-        
+    public AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
+    
         System.out.println("[ERROR] PRH : Method not implemented !");
-        
+    
         return null;
     }
     
     @Override
-    AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches) {
+    public AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches) {
         
         return findWorkingParameters(numberOfMatches, 1);
     }
