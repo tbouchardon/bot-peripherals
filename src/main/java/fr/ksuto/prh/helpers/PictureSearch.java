@@ -21,6 +21,8 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         setTracking(true);
         startDebug();
     
+        setCountDown(3);
+    
         Parameter workingParameters = PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
     
         setShowTargets(false);

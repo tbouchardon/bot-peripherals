@@ -799,10 +799,17 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
     
     public AbstractSeeker<S, T> setSearchZone(Screen.Zone zone) {
-    
+        
         if (searchZone != null == optimizing) {return this;}
         
         this.searchZone = zone;
+        
+        return this;
+    }
+    
+    public AbstractSeeker<S, T> setCountDown(int startingFrom) {
+        
+        showObjects.countDown(startingFrom);
         
         return this;
     }
