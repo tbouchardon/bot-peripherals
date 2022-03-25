@@ -26,15 +26,15 @@ public abstract class AbstractPostgresDatabase {
         this.database = database;
         this.url = "jdbc:postgresql://127.0.0.1:5432/" + database;
         
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
-            if (connection != null) {
-                DatabaseMetaData meta = connection.getMetaData();
-                //                System.out.println("[INFO] the driver name is " + meta.getDriverName());
-            }
-        }
-        catch (SQLException e) {
-            System.out.println("[ERROR] " + e.getMessage());
-        }
+        testDatabaseConnexion();
+    }
+    
+    public AbstractPostgresDatabase(String url, String database) {
+        
+        this.database = database;
+        this.url = "jdbc:postgresql://" + url + "/" + database;
+        
+        testDatabaseConnexion();
     }
     
     public static void main(String[] args) {
@@ -43,13 +43,9 @@ public abstract class AbstractPostgresDatabase {
         System.out.println(monInt);
     }
     
-    public <T> T queryOneRecordWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
+    public String formatDate(Date date) {
         
-        List<T> list = queryRecordListWithRunner(query, type);
-        
-        if (list.isEmpty()) { return null; }
-        
-        return list.get(0);
+        return getDatabaseDateFormat().format(date);
     }
     
     public <T> T queryOneFieldWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
@@ -57,15 +53,24 @@ public abstract class AbstractPostgresDatabase {
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
         
         try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
-            
+    
             QueryRunner queryRunner = new QueryRunner();
             return queryRunner.query(connection, query, new ScalarHandler<T>());
         }
         catch (SQLException e) {
             System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
         }
-        
+    
         return null;
+    }
+    
+    public <T> T queryOneRecordWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
+        
+        List<T> list = queryRecordListWithRunner(query, type);
+        
+        if (list.isEmpty()) {return null;}
+        
+        return list.get(0);
     }
     
     public <T> List<T> queryRecordListWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
@@ -113,9 +118,17 @@ public abstract class AbstractPostgresDatabase {
         return null;
     }
     
-    public String formatDate(Date date) {
+    private void testDatabaseConnexion() {
         
-        return getDatabaseDateFormat().format(date);
+        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+            if (connection != null) {
+                DatabaseMetaData meta = connection.getMetaData();
+                //                System.out.println("[INFO] the driver name is " + meta.getDriverName());
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("[ERROR] " + e.getMessage());
+        }
     }
     
     public SimpleDateFormat getDatabaseDateFormat() {

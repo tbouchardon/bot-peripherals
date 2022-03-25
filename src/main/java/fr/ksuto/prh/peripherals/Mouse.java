@@ -270,7 +270,7 @@ public class Mouse extends Peripheral {
     
         generateDeviationsPoints(xB, yB, xA, yA, isLeftToRight, numberOfDeviations, pointList);
     
-        int maximumOverRun = (int) Math.min(150, distance * 0.2);
+        int maximumOverRun = (int) Math.min(150, distance * 0.2 + 1);
     
         for (int i = 0; i < numberOfOverRun; i++) {
             pointList.add(new Point((int) (xB + random.nextInt(maximumOverRun) - maximumOverRun / 2D),

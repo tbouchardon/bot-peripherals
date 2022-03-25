@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -438,19 +439,20 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             Iterator<Position> positionsIterator = object.getPositions().iterator();
             
             while (positionsIterator.hasNext()) {
-                
+    
                 Position position = positionsIterator.next();
-                
-                Position currentPosition = new Position(position.getX() - exclusiveZone - maximumMovement, position.getY() - exclusiveZone - maximumMovement);
-                
+    
+                Position currentPosition = new Position(Math.max(0, position.getX() - exclusiveZone - maximumMovement),
+                                                        Math.max(0, position.getY() - exclusiveZone - maximumMovement));
+    
                 boolean objectFound = false;
-                
+    
                 for (; currentPosition.getY() < position.getY() + object.getHeight() + exclusiveZone + maximumMovement &&
                        currentPosition.getY() < capturedScreen.getHeight(); currentPosition.incY()) {
-                    currentPosition.setX(position.getX() - exclusiveZone - maximumMovement);
+                    currentPosition.setX(Math.max(0, position.getX() - exclusiveZone - maximumMovement));
                     for (; currentPosition.getX() < position.getX() + object.getWidth() + exclusiveZone + maximumMovement &&
                            currentPosition.getX() < capturedScreen.getWidth(); currentPosition.incX()) {
-                        
+            
                         objectFound = isObjectFound(capturedScreen, currentPosition, object);
                         
                         if (objectFound) {
@@ -661,10 +663,18 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 else {return o1.getY() - o2.getY();}
             });
         }
-        
+    
         if (debug || showTargets) {showObjects.setLocatedObjects(objects);}
-        
+    
         return this;
+    }
+    
+    public List<Position> getAllPositions() {
+        
+        return getAllResults().stream()
+                .map(LocatedObject::getPositions)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
     
     public List<T> getAllResults() {

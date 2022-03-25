@@ -15,6 +15,12 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     }
     
     @Override
+    boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, Picture object) {
+        
+        return isPictureFound(capturedScreen, object, currentPosition);
+    }
+    
+    @Override
     boolean searchObject(BufferedImage capturedScreen, Position currentPosition, Picture picture) {
         
         if (isPictureFound(capturedScreen, picture, currentPosition)) {
@@ -26,23 +32,48 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         return false;
     }
     
-    @Override
-    boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, Picture object) {
-        
-        return isPictureFound(capturedScreen, object, currentPosition);
-    }
-    
     public static PictureSearch getDefault(AbstractPictureEnum pictureEnum) throws AWTException {
         
         PictureSearch pictureSearch = new PictureSearch();
-        
-        if (pictureEnum != null) { pictureSearch.addPictureWithUrl(pictureEnum.getUrl()); }
+    
+        if (pictureEnum != null) {pictureSearch.addPictureWithUrl(pictureEnum.getUrl());}
         
         pictureSearch
                 .setPrecision(20)
                 .setAllowedErrorRate(0.05);
         
         return pictureSearch;
+    }
+    
+    public PictureSearch addPicture(AbstractPictureEnum pictureEnum, Object o) {
+        
+        Picture picture = new Picture(pictureEnum.getUrl());
+        picture.setObject(o);
+        
+        objects.add(picture);
+    
+        return this;
+    }
+    
+    public PictureSearch addPicture(AbstractPictureEnum pictureEnum) {
+        
+        this.objects.add(new Picture(pictureEnum.getUrl()));
+        
+        return this;
+    }
+    
+    public PictureSearch addPicture(Picture picture) {
+        
+        this.objects.add(picture);
+        
+        return this;
+    }
+    
+    public PictureSearch addPictureWithUrl(String url) {
+        
+        this.objects.add(new Picture(url));
+        
+        return this;
     }
     
     public PictureSearch addPictureWithUrl(String url, Object o) {
@@ -55,48 +86,33 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         return this;
     }
     
-    public PictureSearch addPicture(AbstractPictureEnum pictureEnum, Object o) {
-        
-        Picture picture = new Picture(pictureEnum.getUrl());
-        picture.setObject(o);
-        
-        objects.add(picture);
-        
-        return this;
-    }
-    
-    public PictureSearch addPicture(AbstractPictureEnum pictureEnum) {
-        
-        this.objects.add(new Picture(pictureEnum.getUrl()));
-        
-        return this;
-    }
-    
-    public PictureSearch addPictureWithUrl(String url) {
-        
-        this.objects.add(new Picture(url));
-        
-        return this;
-    }
-    
-    public PictureSearch addPicture(Picture picture) {
-        
-        this.objects.add(picture);
-        
-        return this;
-    }
-    
     public PictureSearch addPicturesWithUrls(String[] urls) {
         
-        for (String url : urls) { addPictureWithUrl(url); }
+        for (String url : urls) {addPictureWithUrl(url);}
         
         return this;
+    }
+    
+    public void findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
+        
+        setShowTargets(true);
+        setTracking(true);
+        debug();
+        
+        PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
+        
+        clean();
+    }
+    
+    public void findWorkingParameters(int numberOfMatches) {
+        
+        findWorkingParameters(numberOfMatches, 1);
     }
     
     private boolean isPictureFound(BufferedImage capturedScreen, Picture picture, Position currentPosition) {
         
-        if (picture.getReferenceImage().getHeight() + currentPosition.getY() >= capturedScreen.getHeight()) { return false; }
-        if (picture.getReferenceImage().getWidth() + currentPosition.getX() >= capturedScreen.getWidth()) { return false; }
+        if (picture.getReferenceImage().getHeight() + currentPosition.getY() >= capturedScreen.getHeight()) {return false;}
+        if (picture.getReferenceImage().getWidth() + currentPosition.getX() >= capturedScreen.getWidth()) {return false;}
         
         int    tempCapturedRGB;
         int    refRGB      = picture.getReferenceImage().getRGB(0, 0);
@@ -119,7 +135,7 @@ yxLoop:
                     refRGB = picture.getReferenceImage().getRGB(xRef, yRef);
                     
                     boolean match = isMatch(tempCapturedRGB, refRGB);
-                    if (!match) { errorNumber++; }
+                    if (!match) {errorNumber++;}
                     
                     double errorRate = errorNumber / area;
                     
