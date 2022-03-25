@@ -27,6 +27,8 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         setTracking(false);
         stopDebug();
     
+        clearResults();
+    
         setPrecision(workingParameters.getPrecision());
         setAllowedErrorRate(workingParameters.getErrorRate());
     
