@@ -39,7 +39,7 @@ public abstract class AbstractPostgresDatabase {
     
     public static void main(String[] args) {
         
-        Integer monInt = new Integer(5);
+        Integer monInt = 5;
         System.out.println(monInt);
     }
     

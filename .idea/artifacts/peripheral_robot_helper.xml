@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="peripheral-robot-helper">
-    <output-path>$PROJECT_DIR$/out/artifacts/peripheral_robot_helper</output-path>
-    <root id="archive" name="peripheral-robot-helper.jar">
-      <element id="module-output" name="TBoPeripheralRobotHelper" />
-    </root>
-  </artifact>
-</component>
