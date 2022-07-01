@@ -13,11 +13,35 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
         super();
     }
     
+    public static ColorSearch getDefault(int red, int green, int blue, int minBlockSize, int maxBlockSize) throws AWTException {
+        
+        ColorSearch colorSearch = new ColorSearch();
+        
+        colorSearch.addColorBlock(red, green, blue, minBlockSize, maxBlockSize);
+        
+        colorSearch.setPrecision(20)
+                .setAllowedErrorRate(0.05);
+        
+        return colorSearch;
+    }
+    
+    public static ColorSearch getDefault(int red, int green, int blue) throws AWTException {
+        
+        ColorSearch colorSearch = new ColorSearch();
+        
+        colorSearch.addColorBlock(red, green, blue);
+        
+        colorSearch.setPrecision(20)
+                .setAllowedErrorRate(0.05);
+        
+        return colorSearch;
+    }
+    
     @Override
     public AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
-    
+        
         System.out.println("[ERROR] PRH : Method not implemented !");
-    
+        
         return null;
     }
     
@@ -65,21 +89,21 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     private boolean isBlockFound(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
-    
+        
         if (currentPosition.getY() >= capturedScreen.getHeight()) {return false;}
         if (currentPosition.getX() >= capturedScreen.getWidth()) {return false;}
-    
+        
         int r, g, b;
         int xDelta    = 0, yDelta = 0;
         int blockSize = 0;
-    
-        while (true) {
         
+        while (true) {
+            
             int capturedRGB = capturedScreen.getRGB(currentPosition.getX() + xDelta, currentPosition.getY() + yDelta);
             b = (capturedRGB) & 0xFF;
             g = (capturedRGB >> 8) & 0xFF;
             r = (capturedRGB >> 16) & 0xFF;
-        
+            
             boolean match;
             if (precision != null) {
                 
