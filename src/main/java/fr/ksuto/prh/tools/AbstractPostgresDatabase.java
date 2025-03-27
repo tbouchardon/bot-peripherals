@@ -1,5 +1,8 @@
 package fr.ksuto.prh.tools;
 
+import fr.ksuto.commons.PropertiesLoader;
+import fr.ksuto.logger.ConsoleLogger;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -9,6 +12,7 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -18,10 +22,14 @@ import org.intellij.lang.annotations.Language;
 
 public abstract class AbstractPostgresDatabase {
     
-    String database;
-    String url;
+    private final Properties properties;
+    ConsoleLogger logger = new ConsoleLogger();
+    String        database;
+    String        url;
     
     public AbstractPostgresDatabase(String database) {
+        
+        this.properties = PropertiesLoader.load("prh");
         
         this.database = database;
         this.url = "jdbc:postgresql://127.0.0.1:5432/" + database;
@@ -30,6 +38,8 @@ public abstract class AbstractPostgresDatabase {
     }
     
     public AbstractPostgresDatabase(String url, String database) {
+        
+        this.properties = PropertiesLoader.load("prh");
         
         this.database = database;
         this.url = "jdbc:postgresql://" + url + "/" + database;
@@ -52,15 +62,17 @@ public abstract class AbstractPostgresDatabase {
         
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
         
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
-    
+        try (Connection connection = DriverManager.getConnection(this.url,
+                                                                 properties.getProperty("ksuto.prh.database.login"),
+                                                                 properties.getProperty("ksuto.prh.database.password"))) {
+            
             QueryRunner queryRunner = new QueryRunner();
             return queryRunner.query(connection, query, new ScalarHandler<T>());
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
-    
+        
         return null;
     }
     
@@ -77,7 +89,9 @@ public abstract class AbstractPostgresDatabase {
         
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
         
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+        try (Connection connection = DriverManager.getConnection(this.url,
+                                                                 properties.getProperty("ksuto.prh.database.login"),
+                                                                 properties.getProperty("ksuto.prh.database.password"))) {
             
             //            System.out.println("[TRACE] PRH : Connected to PostgreSQL database!");
             QueryRunner               queryRunner     = new QueryRunner();
@@ -86,33 +100,35 @@ public abstract class AbstractPostgresDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
         
         return null;
     }
     
     public ResultSet queryWithStatement(String query) {
-    
+        
         //        System.out.println("[TRACE] PRH : Java JDBC PostgreSQL Connexion Test");
-    
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres");
+        
+        try (Connection connection = DriverManager.getConnection(this.url,
+                                                                 properties.getProperty("ksuto.prh.database.login"),
+                                                                 properties.getProperty("ksuto.prh.database.password"));
              Statement statement = connection.createStatement()) {
-        
+            
             //            System.out.println("[TRACE] PRH : Connected to PostgreSQL database!");
-        
+            
             //            System.out.println("[TRACE] PRH : Reading objects records...");
             //            System.out.printf("%-30.30s  %-30.30s%n", "Id", "X Position");
-        
+            
             if (query.toLowerCase().startsWith("select")) {return statement.executeQuery(query);}
             else {statement.executeUpdate(query);}
-        
+            
             //            while (resultSet.next()) {
             //                System.out.printf("%-30.30s  %-30.30s%n", resultSet.getString("id"), resultSet.getString("hash"));
             //            }
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -120,14 +136,16 @@ public abstract class AbstractPostgresDatabase {
     
     private void testDatabaseConnexion() {
         
-        try (Connection connection = DriverManager.getConnection(this.url, "postgres", "postgres")) {
+        try (Connection connection = DriverManager.getConnection(this.url,
+                                                                 properties.getProperty("ksuto.prh.database.login"),
+                                                                 properties.getProperty("ksuto.prh.database.password"))) {
             if (connection != null) {
                 DatabaseMetaData meta = connection.getMetaData();
                 //                System.out.println("[INFO] the driver name is " + meta.getDriverName());
             }
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            logger.sysOutError("" + e.getMessage());
         }
     }
     

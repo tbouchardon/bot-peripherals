@@ -1,9 +1,12 @@
 package fr.ksuto.prh.helpers;
 
+import static fr.ksuto.prh.helpers.ZoneSelector.selectZone;
+
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
+import fr.ksuto.logger.ConsoleLogger;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -17,14 +20,16 @@ public class PictureHelper {
     public PictureHelper() throws AWTException {}
     
     public static Parameter findWorkingParameters(int numberOfMatches, AbstractSeeker seeker, int numberOfNoChangeLoops) {
-    
+        
+        ConsoleLogger logger = new ConsoleLogger();
+        
         java.util.List<Parameter> parameters = new ArrayList<>();
         for (double e = 0.0; e <= 0.30; e += 0.05) {
             for (int p = 0; p < 66; p += 5) {
                 parameters.add(new Parameter(p, e));
             }
         }
-    
+        
         List<LocatedObject> objects = seeker.getObjects();
         
         java.util.List<Parameter> top10BestParameters      = new ArrayList<>();
@@ -40,7 +45,7 @@ public class PictureHelper {
                 top10BestParameters.add(parameters.remove(0));
             }
             
-            System.out.println("[TRACE] PRH : ------------------------------------------------------------------------------------------------------------------------");
+            logger.sysOutTrace("------------------------------------------------------------------------------------------------------------------------");
             
             Iterator<Parameter> iterator = top10BestParameters.iterator();
             
@@ -55,12 +60,13 @@ public class PictureHelper {
                 String spentString = String.format("%1.2f", ((float) spent) / (1000 * 1000 * 1000));
                 
                 if (spent > 3L * 1000 * 1000 * 1000) {
-                    System.out.println("[INFO] PRH : precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, " + spentString + "s > 3s");
+                    
+                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, " + spentString + "s > 3s");
                     iterator.remove();
                     noChangeLoops = 0;
                 }
                 else if (seeker.getNumberOfResults() != numberOfMatches) {
-                    System.out.println("[INFO] PRH : precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
+                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
                                        " " + numberOfMatches);
                     if (closestParameters == null || Math.abs(numberOfMatches - seeker.getNumberOfResults()) < Math.abs(numberOfMatches - closestParametersMatches)) {
                         closestParametersMatches = seeker.getNumberOfResults();
@@ -70,36 +76,71 @@ public class PictureHelper {
                     noChangeLoops = 0;
                 }
                 else {
-                    System.out.println("[INFO] PRH : precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
+                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
                     objects.get(0).getPositions().forEach(position -> {
-                        System.out.println("[TRACE] PRH :     Area : " +
+                        logger.sysOutTrace("    Area : " +
                                            position.getX() + ", " +
                                            position.getY() + ", " +
                                            (objects.get(0).getWidth() + position.getX()) + ", " +
                                            (objects.get(0).getHeight() + position.getY()));
                     });
-                    System.out.println("[SUCCESS] PRH :     .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                    logger.sysOutSuccess("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
                 }
             }
         }
-    
-        System.out.println("[INFO] PRH : ");
+        
+        logger.sysOutInfo("");
         if (top10BestParameters.isEmpty()) {
-            System.out.println("[WARN] PRH : No perfect parameters found, closest match :");
-            System.out.println("[WARN] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
+            logger.sysOutWarning("No perfect parameters found, closest match :");
+            logger.sysOutWarning("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
                                ", found " + closestParametersMatches + "/" + " " + numberOfMatches);
         }
         else {
-            System.out.println("[SUCCESS] PRH : best match :");
-            System.out.println("[WARN] PRH : precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
+            logger.sysOutSuccess("best match :");
+            logger.sysOutWarning("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
         }
         //        if (seeker.hasAnyResults()) {
-        //            System.out.println("[TRACE] PRH : Positions : ");
+        //            logger.sysOutTrace("Positions : ");
         //            objects.get(0).getPositions().forEach(position -> {
         //                System.out.println(position.getX() + ":" + position.getY());
         //            });
         //        }
         return closestParameters;
+    }
+    
+    public static void freeSearch(String[] urls) throws AWTException {
+        
+        freeSearch(urls, null);
+    }
+    
+    public static void freeSearch(String[] urls, Screen.Zone searchZone) throws AWTException {
+        
+        ConsoleLogger logger = new ConsoleLogger();
+        
+        if (searchZone == null) {searchZone = selectZone();}
+        
+        if (searchZone.getHeight() == 0 || searchZone.getWidth() == 0) return;
+        
+        PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
+                                                              .addPicturesWithUrls(urls)
+                                                              .setSearchZone(searchZone)
+                                                              .setShowTargets(true)
+                                                              .setTracking(true)
+                                                              .setAllowedErrorRate(0.05)
+                                                              .setPrecision(20)
+                                                              .startDebug();
+        
+        while (!pictureSearch.shouldClose()) {
+            pictureSearch.search();
+        }
+        
+        int numberOfMatches = pictureSearch.getAllPositions().size();
+        if (numberOfMatches >= 1) logger.sysOutSuccess("Found " + numberOfMatches + " matches !");
+        if (numberOfMatches == 0) logger.sysOutWarning("No matches found =(");
+        logger.sysOutInfo("Picture search builder :");
+        pictureSearch.export();
+        pictureSearch.stopDebug();
+        
     }
     
     public void pictureHelper(String url, int numberOfMatches, boolean learn) throws AWTException {
@@ -114,31 +155,33 @@ public class PictureHelper {
     
     public void pictureHelper(String[] urls, int numberOfMatches, Screen.Zone searchZone, boolean learn) throws AWTException {
         
+        ConsoleLogger logger = new ConsoleLogger();
+        
         for (int countDown = 5; countDown >= 0; countDown--) {
-            System.out.println("[TRACE] PRH : countDown = " + countDown);
+            logger.sysOutInfo("countDown = " + countDown);
             Peripheral.delay(1000);
         }
         
         if (learn) {
             PictureSearch search = (PictureSearch) new PictureSearch()
-                    .addPicturesWithUrls(urls)
-                    .setSearchZone(searchZone)
-                    .setShowTargets(true)
-                    .setTracking(true)
-                    .startDebug()
-                    .learn(numberOfMatches)
-                    .optimize()
-                    .search();
+                                                           .addPicturesWithUrls(urls)
+                                                           .setSearchZone(searchZone)
+                                                           .setShowTargets(true)
+                                                           .setTracking(true)
+                                                           .startDebug()
+                                                           .learn(numberOfMatches)
+                                                           .optimize()
+                                                           .search();
             
             search.clean();
         }
         else {
             PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
-                    .addPicturesWithUrls(urls)
-                    .setSearchZone(searchZone)
-                    .setShowTargets(true)
-                    .setTracking(true)
-                    .startDebug();
+                                                                  .addPicturesWithUrls(urls)
+                                                                  .setSearchZone(searchZone)
+                                                                  .setShowTargets(true)
+                                                                  .setTracking(true)
+                                                                  .startDebug();
             
             findWorkingParameters(numberOfMatches, pictureSearch, Integer.MAX_VALUE);
             

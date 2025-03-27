@@ -1,7 +1,6 @@
 package fr.ksuto.prh.peripherals;
 
-import fr.ksuto.prh.properties.Constants;
-import fr.ksuto.prh.tools.Debug;
+import fr.ksuto.logger.ConsoleLogger;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -16,13 +15,18 @@ public class Keyboard extends Peripheral {
     
     @Inject
     private MousePosition mousePosition;
+    @Inject
+    private ConsoleLogger logger;
+    private int           typingDelay;
     
     Keyboard() throws AWTException {
         
+        super();
+        typingDelay = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.keyboard.typing.delay", "50"));
     }
     
     public void altTab() {
-    
+        
         mousePosition.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_ALT);
@@ -32,12 +36,117 @@ public class Keyboard extends Peripheral {
     }
     
     public void enter() {
-    
+        
         mousePosition.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_ENTER);
         robot.keyRelease(KeyEvent.VK_ENTER);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
+    }
+    
+    public void escape() {
+        
+        mousePosition.waitIfUserActive();
+        
+        robot.keyPress(KeyEvent.VK_ESCAPE);
+        robot.keyRelease(KeyEvent.VK_ESCAPE);
+        delay(i_DELAY);
+    }
+    
+    public void f1() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F1);
+        robot.keyRelease(KeyEvent.VK_F1);
+        delay(i_DELAY);
+    }
+    
+    public void f10() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F10);
+        robot.keyRelease(KeyEvent.VK_F10);
+        delay(i_DELAY);
+    }
+    
+    public void f11() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F11);
+        robot.keyRelease(KeyEvent.VK_F11);
+        delay(i_DELAY);
+    }
+    
+    public void f12() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F12);
+        robot.keyRelease(KeyEvent.VK_F12);
+        delay(i_DELAY);
+    }
+    
+    public void f2() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F2);
+        robot.keyRelease(KeyEvent.VK_F2);
+        delay(i_DELAY);
+    }
+    
+    public void f3() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F3);
+        robot.keyRelease(KeyEvent.VK_F3);
+        delay(i_DELAY);
+    }
+    
+    public void f4() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F4);
+        robot.keyRelease(KeyEvent.VK_F4);
+        delay(i_DELAY);
+    }
+    
+    public void f5() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F5);
+        robot.keyRelease(KeyEvent.VK_F5);
+        delay(i_DELAY);
+    }
+    
+    public void f6() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F6);
+        robot.keyRelease(KeyEvent.VK_F6);
+        delay(i_DELAY);
+    }
+    
+    public void f7() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F7);
+        robot.keyRelease(KeyEvent.VK_F7);
+        delay(i_DELAY);
+    }
+    
+    public void f8() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F8);
+        robot.keyRelease(KeyEvent.VK_F8);
+        delay(i_DELAY);
+    }
+    
+    public void f9() {
+        
+        mousePosition.waitIfUserActive();
+        robot.keyPress(KeyEvent.VK_F9);
+        robot.keyRelease(KeyEvent.VK_F9);
+        delay(i_DELAY);
     }
     
     public void pressKey(int keyEvent) {
@@ -47,46 +156,43 @@ public class Keyboard extends Peripheral {
     
     public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift) {
         
-        if (alt) { robot.keyPress(KeyEvent.VK_ALT); }
-        if (ctrl) { robot.keyPress(KeyEvent.VK_CONTROL); }
-        if (shift) { robot.keyPress(KeyEvent.VK_SHIFT); }
-        
-        delay(Constants.i_DELAY);
-        robot.keyPress(keyEvent);
-        robot.keyRelease(keyEvent);
-        delay(Constants.i_DELAY);
-        
-        if (shift) { robot.keyRelease(KeyEvent.VK_SHIFT); }
-        if (ctrl) { robot.keyRelease(KeyEvent.VK_CONTROL); }
-        if (alt) { robot.keyRelease(KeyEvent.VK_ALT); }
+        pressKey(keyEvent, alt, ctrl, shift, 0);
     }
     
-    public void escape() {
-    
-        mousePosition.waitIfUserActive();
+    public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift, int duration) {
         
-        robot.keyPress(KeyEvent.VK_ESCAPE);
-        robot.keyRelease(KeyEvent.VK_ESCAPE);
-        delay(Constants.i_DELAY);
+        if (alt) {robot.keyPress(KeyEvent.VK_ALT);}
+        if (ctrl) {robot.keyPress(KeyEvent.VK_CONTROL);}
+        if (shift) {robot.keyPress(KeyEvent.VK_SHIFT);}
+        
+        delay(i_DELAY);
+        robot.keyPress(keyEvent);
+        delay(duration);
+        robot.keyRelease(keyEvent);
+        delay(i_DELAY);
+        
+        if (shift) {robot.keyRelease(KeyEvent.VK_SHIFT);}
+        if (ctrl) {robot.keyRelease(KeyEvent.VK_CONTROL);}
+        if (alt) {robot.keyRelease(KeyEvent.VK_ALT);}
     }
     
     public void selectAll() {
-    
-        Debug.sout();
+        
+        logger.sysOut();
         mousePosition.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_CONTROL);
         robot.keyPress(KeyEvent.VK_A);
         robot.keyRelease(KeyEvent.VK_A);
         robot.keyRelease(KeyEvent.VK_CONTROL);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
     }
     
     public void typeString(String strText) {
-    
+        
         mousePosition.waitIfUserActive();
         
-        Debug.sout("typeString(" + strText + ")");
+        logger.sysOutInfo("typeString(" + strText + ")");
         
         for (char cLetter : strText.toCharArray()) {
             
@@ -474,105 +580,9 @@ public class Keyboard extends Peripheral {
                     robot.keyRelease(KeyEvent.VK_ALT);
                     break;
             }
-            delay(Constants.i_TYPING_DELAY);
+            delay(typingDelay);
         }
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f1() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F1);
-        robot.keyRelease(KeyEvent.VK_F1);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f2() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F2);
-        robot.keyRelease(KeyEvent.VK_F2);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f3() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F3);
-        robot.keyRelease(KeyEvent.VK_F3);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f4() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F4);
-        robot.keyRelease(KeyEvent.VK_F4);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f5() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F5);
-        robot.keyRelease(KeyEvent.VK_F5);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f6() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F6);
-        robot.keyRelease(KeyEvent.VK_F6);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f7() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F7);
-        robot.keyRelease(KeyEvent.VK_F7);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f8() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F8);
-        robot.keyRelease(KeyEvent.VK_F8);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f9() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F9);
-        robot.keyRelease(KeyEvent.VK_F9);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f10() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F10);
-        robot.keyRelease(KeyEvent.VK_F10);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f11() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F11);
-        robot.keyRelease(KeyEvent.VK_F11);
-        delay(Constants.i_DELAY);
-    }
-    
-    public void f12() {
-    
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F12);
-        robot.keyRelease(KeyEvent.VK_F12);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
     }
 }
     

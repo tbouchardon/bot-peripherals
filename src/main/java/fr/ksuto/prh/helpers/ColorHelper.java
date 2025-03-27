@@ -1,5 +1,6 @@
 package fr.ksuto.prh.helpers;
 
+import fr.ksuto.commons.awt.Painter;
 import fr.ksuto.prh.entities.Position;
 import fr.ksuto.prh.peripherals.Screen;
 import lombok.NoArgsConstructor;

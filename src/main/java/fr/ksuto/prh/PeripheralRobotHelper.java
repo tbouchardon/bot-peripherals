@@ -1,5 +1,6 @@
 package fr.ksuto.prh;
 
+import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.prh.peripherals.Keyboard;
 import fr.ksuto.prh.peripherals.Mouse;
 import fr.ksuto.prh.peripherals.MousePosition;
@@ -7,6 +8,7 @@ import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
+import java.util.Properties;
 
 import com.google.inject.Inject;
 
@@ -16,7 +18,7 @@ import com.google.inject.Inject;
 @SuppressWarnings({"unused", "DefaultFileTemplate"})
 public class PeripheralRobotHelper {
     
-    public Robot robot = new Robot();
+    public        Robot      robot = new Robot();
     
     @Inject
     private MousePosition mousePosition;
@@ -27,7 +29,8 @@ public class PeripheralRobotHelper {
     @Inject
     private Keyboard      keyboard;
     
-    public PeripheralRobotHelper() throws AWTException {}
+    public PeripheralRobotHelper() throws AWTException {
+    }
     
     public static void delay(long ms) {
         

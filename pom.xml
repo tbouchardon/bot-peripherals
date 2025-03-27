@@ -15,18 +15,11 @@
 
         <dep.annotations.version>20.1.0</dep.annotations.version>
         <dep.commons-dbutils.version>1.7</dep.commons-dbutils.version>
-        <dep.junit-jupiter-api.version>5.6.2</dep.junit-jupiter-api.version>
-        <dep.lombok.version>1.18.4</dep.lombok.version>
-        <dep.postgresql.version>42.1.4</dep.postgresql.version>
+        <dep.postgresql.version>42.4.0</dep.postgresql.version>
         <dev.guice.version>5.1.0</dev.guice.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${dep.lombok.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -54,10 +47,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>${dep.junit-jupiter-api.version}</version>
-            <scope>test</scope>
+            <groupId>fr.ksuto</groupId>
+            <artifactId>logger</artifactId>
+            <version>2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>fr.ksuto</groupId>
+            <artifactId>commons</artifactId>
+            <version>1.0</version>
         </dependency>
 
     </dependencies>

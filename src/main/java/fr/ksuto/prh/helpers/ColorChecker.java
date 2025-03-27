@@ -28,7 +28,7 @@ public class ColorChecker {
         if (capturedScreen == null) { capturedScreen = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT)); }
         
         int iCapturedRGB = capturedScreen.getRGB(x, y);
-        // Debug.sout("Peripheral > (" + x + ", " + y + ") Searching : " + color + ", found : " + iCapturedRGB + ".");
+        // Debug.sysOut("Peripheral > (" + x + ", " + y + ") Searching : " + color + ", found : " + iCapturedRGB + ".");
         return (color == iCapturedRGB);
     }
     

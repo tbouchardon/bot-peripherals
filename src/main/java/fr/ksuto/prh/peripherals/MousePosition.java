@@ -1,6 +1,7 @@
 package fr.ksuto.prh.peripherals;
 
-import fr.ksuto.prh.tools.Debug;
+import fr.ksuto.logger.ConsoleLogger;
+import fr.ksuto.prh.entities.PositionXY;
 
 import java.awt.*;
 import java.util.Objects;
@@ -20,13 +21,23 @@ public class MousePosition {
     public  boolean waitIfUserActive = false;
     @Inject
     private Screen  screen;
-    private int     xPos;
-    private int     yPos;
-    private Robot   robot            = new Robot();
+    
+    @Inject
+    private ConsoleLogger logger;
+    
+    private int   xPos;
+    private int   yPos;
+    private Robot robot = new Robot();
     
     public MousePosition() throws AWTException {
         
         updateMousePosition();
+    }
+    
+    @Override
+    public int hashCode() {
+        
+        return Objects.hash(xPos, yPos);
     }
     
     //    MousePosition(int xPos, int yPos) throws AWTException {
@@ -37,21 +48,22 @@ public class MousePosition {
     
     @Override
     public boolean equals(Object other) {
-    
+        
         if (other == null) {return false;}
         if (other == this) {return true;}
         if (!(other instanceof MousePosition)) {return false;}
-    
+        
         //noinspection UnnecessaryLocalVariable
         boolean hasMoved = (xPos != ((MousePosition) other).xPos) || (yPos != ((MousePosition) other).yPos);
-    
+        
         return hasMoved;
     }
     
-    @Override
-    public int hashCode() {
+    public boolean hasMoved() {
         
-        return Objects.hash(xPos, yPos);
+        Point point = MouseInfo.getPointerInfo().getLocation();
+        
+        return point.x == this.xPos && point.y == this.yPos;
     }
     
     public void updateMousePosition() {
@@ -61,18 +73,11 @@ public class MousePosition {
         yPos = point.y;
     }
     
-    public boolean hasMoved() {
-        
-        Point point = MouseInfo.getPointerInfo().getLocation();
-    
-        return point.x == this.xPos && point.y == this.yPos;
-    }
-    
     public void waitIfUserActive() {
         
-        if (!waitIfUserActive) { return; }
+        if (!waitIfUserActive) {return;}
         
-        Debug.sout();
+        logger.sysOut();
         
         while (hasMoved()) {
             updateMousePosition();
@@ -113,5 +118,10 @@ public class MousePosition {
             
             frame.dispose();
         }
+    }
+    
+    public PositionXY getPosition() {
+        
+        return new PositionXY(xPos, yPos);
     }
 }

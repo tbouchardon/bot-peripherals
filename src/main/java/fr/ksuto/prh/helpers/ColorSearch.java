@@ -40,7 +40,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     @Override
     public AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
         
-        System.out.println("[ERROR] PRH : Method not implemented !");
+        logger.sysOutError("Method not implemented !");
         
         return null;
     }
@@ -141,5 +141,12 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
         currentPosition.setObject(blockSize);
         
         return blockSize >= colorBlock.getMinBlockSize() && blockSize <= colorBlock.getMaxBlockSize();
+    }
+    
+    public static void main(String[] args) throws AWTException {
+    
+        ColorSearch colorSearch = ColorSearch.getDefault(0, 255, 0, 256, 256);
+        colorSearch.search();
+        colorSearch.getAllResults();
     }
 }

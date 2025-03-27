@@ -1,6 +1,9 @@
 package fr.ksuto.prh;
 
+import fr.ksuto.logger.ConsoleLogger;
+import fr.ksuto.prh.entities.PositionXY;
 import fr.ksuto.prh.peripherals.Peripheral;
+import fr.ksuto.prh.tools.MouseCapture;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -23,34 +26,44 @@ public class Tests {
     final Dimension dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
     final int       SCREEN_HEIGHT = (int) dim_D.getHeight();
     final int       SCREEN_WIDTH  = (int) dim_D.getWidth();
+    ConsoleLogger logger = new ConsoleLogger();
     @Inject
     PeripheralRobotHelper robotHelper;
     
     public static void main(String[] args) throws AWTException {
-    
+        
         int        i     = 0;
         List<Long> times = new ArrayList<>();
         times.add(0L);
         times.add(0L);
         long first  = System.nanoTime();
         long second = System.nanoTime();
-    
+        
         while (second - first < 50000) {
             i++;
             second = System.nanoTime();
             times.add(second - first);
         }
-    
-        System.out.println("i = " + i);
-        System.out.println("first = " + first);
-        System.out.println("second = " + second);
-        System.out.println("second - first = " + (second - first));
-        System.out.println(times);
-    
+        
+//        System.out.println("i = " + i);
+//        System.out.println("first = " + first);
+//        System.out.println("second = " + second);
+//        System.out.println("second - first = " + (second - first));
+//        System.out.println(times);
+        
         Tests tests = Guice.createInjector().getInstance(Tests.class);
-        tests.robotHelper.getMouse().move(200, 200);
-        tests.robotHelper.getMouse().move(1000, 1000);
-        tests.robotHelper.getMouse().move(100, 1000);
+//        tests.robotHelper.getMouse().move(200, 200);
+//        tests.robotHelper.getMouse().move(1000, 1000);
+//        tests.robotHelper.getMouse().move(100, 1000);
+        
+        MouseCapture mouseCapture = new MouseCapture() {
+            
+            @Override
+            public void onClick(PositionXY position) {
+                System.out.println("position = " + position);
+            }
+        };
+        
     }
     
     private String getMouseHex(int delay) throws AWTException {
@@ -60,7 +73,7 @@ public class Tests {
         Color pixelColor = robot.getPixelColor(MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y);
         System.out.print(pixelColor);
         String formatedColor = String.format("#%02x%02x%02x", pixelColor.getRed(), pixelColor.getGreen(), pixelColor.getBlue());
-        System.out.println("[TRACE] PRH :  => " + formatedColor);
+        logger.sysOutTrace(" => " + formatedColor);
         
         return formatedColor;
     }
@@ -86,10 +99,10 @@ public class Tests {
             int[] pixels = ((DataBufferInt) capturedScreen.getRaster().getDataBuffer()).getData();
             for (int p : pixels) {
                 
-                if (p == 13) {System.out.println("[TRACE] PRH : hello");}
+                if (p == 13) {logger.sysOutTrace("hello");}
             }
         }
-        System.out.println("[TRACE] PRH : getRaster : " + (System.currentTimeMillis() - startTime));
+        logger.sysOutTrace("getRaster : " + (System.currentTimeMillis() - startTime));
     }
     
     private void rgb() throws AWTException {
@@ -105,11 +118,11 @@ public class Tests {
             
             for (int x = 0; x < capturedScreen.getWidth(); x++) {
                 for (int y = 0; y < capturedScreen.getHeight(); y++) {
-                    if (capturedScreen.getRGB(x, y) == 13) {System.out.println("[TRACE] PRH : hello");}
+                    if (capturedScreen.getRGB(x, y) == 13) {logger.sysOutTrace("hello");}
                 }
             }
         }
-        System.out.println("[TRACE] PRH : getRGB : " + (System.currentTimeMillis() - startTime));
+        logger.sysOutTrace("getRGB : " + (System.currentTimeMillis() - startTime));
     }
     
     private void run() throws InterruptedException {
@@ -129,6 +142,6 @@ public class Tests {
         executorService.shutdown();
         executorService.awaitTermination(1, TimeUnit.MINUTES);
         
-        System.out.println("[TRACE] PRH : RunnableRobot : " + (System.currentTimeMillis() - startTime));
+        logger.sysOutTrace("RunnableRobot : " + (System.currentTimeMillis() - startTime));
     }
 }

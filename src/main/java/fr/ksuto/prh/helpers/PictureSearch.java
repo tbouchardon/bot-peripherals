@@ -7,6 +7,8 @@ import fr.ksuto.prh.entities.Position;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
+import java.util.Locale;
 
 public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     
@@ -16,24 +18,24 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     }
     
     public PictureSearch findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
-    
+        
         setShowTargets(true);
         setTracking(true);
         startDebug();
-    
+        
         setCountDown(3);
-    
+        
         Parameter workingParameters = PictureHelper.findWorkingParameters(numberOfMatches, this, numberOfNoChangeLoops);
-    
+        
         setShowTargets(false);
         setTracking(false);
         stopDebug();
-    
+        
         clearResults();
-    
+        
         setPrecision(workingParameters.getPrecision());
         setAllowedErrorRate(workingParameters.getErrorRate());
-    
+        
         return this;
     }
     
@@ -62,13 +64,18 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     
     public static PictureSearch getDefault(AbstractPictureEnum pictureEnum) throws AWTException {
         
-        PictureSearch pictureSearch = new PictureSearch();
+        return getDefault(pictureEnum, 20, 0.05);
+    }
     
+    public static PictureSearch getDefault(AbstractPictureEnum pictureEnum, int precision, double errorRate) throws AWTException {
+        
+        PictureSearch pictureSearch = new PictureSearch();
+        
         if (pictureEnum != null) {pictureSearch.addPictureWithUrl(pictureEnum.getUrl());}
         
         pictureSearch
-                .setPrecision(20)
-                .setAllowedErrorRate(0.05);
+                .setPrecision(precision)
+                .setAllowedErrorRate(errorRate);
         
         return pictureSearch;
     }
@@ -79,7 +86,7 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         picture.setObject(o);
         
         objects.add(picture);
-    
+        
         return this;
     }
     
@@ -121,6 +128,22 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
         return this;
     }
     
+    public void export() {
+        
+        System.out.println("PictureSearch.getDefault(" + objects.get(0).getHash().replace(".png", "").toUpperCase(Locale.ROOT) + ")");
+        if (objects.size() > 1) {
+            for (int i = 1, objectsSize = objects.size(); i < objectsSize; i++) {
+                Picture object = objects.get(i);
+                System.out.println("        .addPicture(" + object.getHash().replace(".png", "").toUpperCase(Locale.ROOT) + ")");
+            }
+        }
+        System.out.println("        .setSearchZone(new Screen.Zone(" + searchZone.getXMin() + ", " + searchZone.getXMax() + ", " + searchZone.getYMin() + ", " + searchZone.getYMax() + "))");
+        if (getAllowedErrorRate() != 0.05d) System.out.println("        .setAllowedErrorRate(" + new DecimalFormat("0.00").format(getAllowedErrorRate()) + ")");
+        if (getPrecision() != 20)System.out.println("        .setPrecision(" + getPrecision() + ")");
+        System.out.println("        .await().clickFirst();");
+        
+    }
+    
     private boolean isPictureFound(BufferedImage capturedScreen, Picture picture, Position currentPosition) {
         
         if (picture.getReferenceImage().getHeight() + currentPosition.getY() >= capturedScreen.getHeight()) {return false;}
@@ -151,7 +174,7 @@ yxLoop:
                     
                     double errorRate = errorNumber / area;
                     
-                    if (errorRate > allowedErrorRate) {
+                    if (errorRate > getAllowedErrorRate()) {
                         found = false;
                         break yxLoop;
                     }

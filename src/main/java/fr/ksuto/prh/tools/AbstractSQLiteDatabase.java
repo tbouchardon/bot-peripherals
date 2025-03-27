@@ -1,5 +1,7 @@
 package fr.ksuto.prh.tools;
 
+import fr.ksuto.logger.ConsoleLogger;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -17,6 +19,7 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.intellij.lang.annotations.Language;
 
 public abstract class AbstractSQLiteDatabase {
+    ConsoleLogger logger = new ConsoleLogger();
     
     String database;
     String url;
@@ -30,11 +33,11 @@ public abstract class AbstractSQLiteDatabase {
         try (Connection conn = DriverManager.getConnection(this.url)) {
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("[INFO] he driver name is " + meta.getDriverName());
+                logger.sysOutInfo("the driver name is " + meta.getDriverName());
             }
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            logger.sysOutError("" + e.getMessage());
         }
     }
     
@@ -61,7 +64,7 @@ public abstract class AbstractSQLiteDatabase {
             return queryRunner.query(connection, query, new ScalarHandler<T>());
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -77,7 +80,7 @@ public abstract class AbstractSQLiteDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -92,7 +95,7 @@ public abstract class AbstractSQLiteDatabase {
             else {statement.executeUpdate(query);}
         }
         catch (SQLException e) {
-            System.out.println("[ERROR] PRH : Query failure : " + e.getMessage());
+            logger.sysOutError("Query failure : " + e.getMessage());
         }
     
         return null;

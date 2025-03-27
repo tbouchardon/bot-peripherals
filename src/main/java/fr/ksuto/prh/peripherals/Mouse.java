@@ -1,11 +1,11 @@
 package fr.ksuto.prh.peripherals;
 
+import fr.ksuto.commons.math.Arithmetic;
+import fr.ksuto.logger.ConsoleLogger;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.entities.Position;
-import fr.ksuto.prh.helpers.Arithmetic;
 import fr.ksuto.prh.helpers.PictureSearch;
-import fr.ksuto.prh.properties.Constants;
-import fr.ksuto.prh.tools.Debug;
+import fr.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -25,23 +25,30 @@ import com.google.inject.Inject;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Mouse extends Peripheral {
     
-    public static final  int           LEFT                 = InputEvent.BUTTON1_DOWN_MASK;
-    public static final  int           RIGHT                = InputEvent.BUTTON3_DOWN_MASK;
-    public static final  double        X_ADJUSTEMENT_FACTOR = 0.0;
-    public static final  double        Y_ADJUSTEMENT_FACTOR = 0.0;
-    private static final Dimension     SCREEN_DIMENSION     = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    private static final int           SCREEN_HEIGHT        = (int) SCREEN_DIMENSION.getHeight();
-    private static final double        START_Y              = (SCREEN_HEIGHT / 2d);
-    private static final int           SCREEN_WIDTH         = (int) SCREEN_DIMENSION.getWidth();
-    private static final double        START_X              = (SCREEN_WIDTH / 2d);
-    private final        Random        random;
+    public static final  int       LEFT                 = InputEvent.BUTTON1_DOWN_MASK;
+    public static final  int       RIGHT                = InputEvent.BUTTON3_DOWN_MASK;
+    public static final  double    X_ADJUSTEMENT_FACTOR = 0.0;
+    public static final  double    Y_ADJUSTEMENT_FACTOR = 0.0;
+    private static final Dimension SCREEN_DIMENSION     = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
+    private static final int       SCREEN_HEIGHT        = (int) SCREEN_DIMENSION.getHeight();
+    private static final double    START_Y              = (SCREEN_HEIGHT / 2d);
+    private static final int       SCREEN_WIDTH         = (int) SCREEN_DIMENSION.getWidth();
+    private static final double    START_X              = (SCREEN_WIDTH / 2d);
+    private final        Random    random;
     @Inject
-    private              Screen        screen;
+    ConsoleLogger logger;
     @Inject
-    private              MousePosition mousePosition;
+    private Screen        screen;
+    @Inject
+    private MousePosition mousePosition;
+    private int           dragDelay;
+    private int           dragSpace;
     
     public Mouse() throws AWTException, NoSuchAlgorithmException {
         
+        super();
+        dragSpace = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.mouse.drag.space", "5"));
+        dragDelay = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.mouse.drag.delay", "10"));
         random = SecureRandom.getInstanceStrong();
     }
     
@@ -62,13 +69,13 @@ public class Mouse extends Peripheral {
         int x    = (numberOf == 1 ? ((x2 - x1) / 2 + x1) : x1);
         
         for (int click = 0; click < numberOf; click++) {
-    
+            
             int y = (int) (y1 + (((double) y2 - (double) y1) / ((double) x2 - (double) x1)) * ((double) x - (double) x1));
             
             naturalMoveTo(x, y);
             robot.mousePress(iButtonMask);
             robot.mouseRelease(iButtonMask);
-            delay(Constants.i_DELAY);
+            delay(i_DELAY);
             x += step;
         }
         
@@ -79,14 +86,14 @@ public class Mouse extends Peripheral {
         
         robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
     }
     
     public void clickLeft(int x, int y) {
         
         mousePosition.waitIfUserActive();
         
-        Debug.sout(x + ", " + y + ")");
+        logger.sysOutTrace(x + ", " + y + ")");
         
         naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
@@ -97,14 +104,14 @@ public class Mouse extends Peripheral {
         
         robot.mousePress(InputEvent.BUTTON3_DOWN_MASK);
         robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
     }
     
     public void clickRight(int x, int y) {
         
         mousePosition.waitIfUserActive();
         
-        Debug.sout(x + ", " + y + ")");
+        logger.sysOutTrace(x + ", " + y + ")");
         
         naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
@@ -115,7 +122,7 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        Debug.sout("String[] sImage)");
+        logger.sysOutTrace("String[] sImage)");
         
         return clickThing(sImage, 0, 0);
     }
@@ -124,20 +131,20 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        Debug.sout("sImage, " + xOffset + ", " + yOffset + ")");
+        logger.sysOutTrace("sImage, " + xOffset + ", " + yOffset + ")");
         
-        Debug.sout("Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
+        logger.sysOutTrace("Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
         
         ArrayList<int[]> alFound;
         
         try {
             PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
-                    .addPicturesWithUrls(sImage)
-                    .search();
+                                                                  .addPicturesWithUrls(sImage)
+                                                                  .search();
             
             if (pictureSearch.hasAnyResults()) {
                 for (Picture picture : pictureSearch.getObjects()) {
-                    Debug.sout(picture.getReferenceImage() + " Found");
+                    logger.sysOutTrace(picture.getReferenceImage() + " Found");
                     if (picture.isPresent()) {
                         for (Position position : picture.getPositions()) {
                             clickLeft(position.getX() + 3 + xOffset, position.getY() + 3 + yOffset);
@@ -155,159 +162,152 @@ public class Mouse extends Peripheral {
     
     public void drag(int xStart, int xEnd, int yStart, int yEnd, int iButtonMask) {
         
-        moveAndPress(iButtonMask, xStart, yStart, 1000);
-        while ((xStart != xEnd) || (yStart != yEnd)) {
-            if (xStart < xEnd) {xStart++;}
-            if (xStart > xEnd) {xStart--;}
-            if (yStart < yEnd) {yStart++;}
-            if (yStart > yEnd) {yStart--;}
-            robot.mouseMove(xStart, yStart);
-            Debug.sout(xStart + " " + yStart);
-            delay(Constants.i_DRAG_DELAY);
-        }
-        release(iButtonMask, 1000, false);
+        naturalMoveTo(xStart, yStart);
+        press(iButtonMask, 250, true);
+        naturalMoveTo(xEnd, yEnd);
+        release(iButtonMask, 250, true);
     }
     
     public void dragAngle(int angle, int distance, int iButtonMask) {
         
         double toRadians = Math.toRadians(angle);
-    
+        
         double xMod = toRadians % (2 * Math.PI) - Math.PI / 2;
         double yMod = toRadians % (2 * Math.PI) - Math.PI;
-    
+        
         double xFactor = -(2 / Math.PI * Math.abs(xMod) - 1);
         double yFactor = 2 / Math.PI * Math.abs(yMod) - 1;
-    
+        
         if (xFactor < 0) {distance = (int) (distance * (1 - X_ADJUSTEMENT_FACTOR * (Math.abs(xFactor))));}
         if (yFactor < 0) {distance = (int) (distance * (1 - Y_ADJUSTEMENT_FACTOR * (Math.abs(yFactor))));}
-    
+        
         double x = START_X;
         double y = START_Y;
-    
+        
         double currentDistance = 0d;
-    
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, Constants.i_DELAY);
-    
+        
+        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        
         while (currentDistance < distance) {
-        
+            
             currentDistance = Math.sqrt(Math.pow(x - START_X, 2) + Math.pow(y - START_Y, 2));
-        
+            
             robot.mouseMove((int) x, (int) y);
-            delay(Constants.i_DRAG_DELAY);
-        
+            delay(dragDelay);
+            
             int oldX = (int) x;
             int oldY = (int) y;
-        
+            
             while (!minimalDistance(x, y, oldX, oldY)) {
                 x -= xFactor;
                 y += yFactor;
             }
         }
         
-        release(iButtonMask, Constants.i_DELAY, true);
+        release(iButtonMask, i_DELAY, true);
     }
     
     public void dragBottom2Top(int iDistance, int iButtonMask) {
-    
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, Constants.i_DELAY);
-        for (int iBT = Screen.Y_START; iBT > Screen.Y_START - iDistance; iBT -= Constants.i_DRAG_SPACE) {
+        
+        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        for (int iBT = Screen.Y_START; iBT > Screen.Y_START - iDistance; iBT -= dragSpace) {
             robot.mouseMove(Screen.SCREEN_WIDTH / 2, iBT);
-            delay(Constants.i_DRAG_DELAY);
+            delay(dragDelay);
         }
-        release(iButtonMask, Constants.i_DELAY, false);
+        release(iButtonMask, i_DELAY, false);
     }
     
     public void dragLeft2Right(int iDistance, int iButtonMask) {
-    
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, Constants.i_DELAY);
-        for (int iLR = Screen.X_START; iLR < Screen.X_START + iDistance; iLR += Constants.i_DRAG_SPACE) {
+        
+        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        for (int iLR = Screen.X_START; iLR < Screen.X_START + iDistance; iLR += dragSpace) {
             robot.mouseMove(iLR, Screen.Y_START);
-            delay(Constants.i_DRAG_DELAY);
+            delay(dragDelay);
         }
-        release(iButtonMask, Constants.i_DELAY, false);
+        release(iButtonMask, i_DELAY, false);
     }
     
     public void dragRight2Left(int iDistance, int iButtonMask) {
-    
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, Constants.i_DELAY);
-        for (int iLR = Screen.X_START; iLR > Screen.X_START - iDistance; iLR -= Constants.i_DRAG_SPACE) {
+        
+        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        for (int iLR = Screen.X_START; iLR > Screen.X_START - iDistance; iLR -= dragSpace) {
             robot.mouseMove(iLR, Screen.Y_START);
-            delay(Constants.i_DRAG_DELAY);
+            delay(dragDelay);
         }
-        release(iButtonMask, Constants.i_DELAY, false);
+        release(iButtonMask, i_DELAY, false);
     }
     
     public void dragTop2Bottom(int iDistance, int iButtonMask) {
-    
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, Constants.i_DELAY);
-        for (int iTB = Screen.Y_START; iTB < Screen.Y_START + iDistance; iTB += Constants.i_DRAG_SPACE) {
+        
+        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        for (int iTB = Screen.Y_START; iTB < Screen.Y_START + iDistance; iTB += dragSpace) {
             robot.mouseMove(Screen.X_START, iTB);
-            delay(Constants.i_DRAG_DELAY);
+            delay(dragDelay);
         }
-        release(iButtonMask, Constants.i_DELAY, false);
+        release(iButtonMask, i_DELAY, false);
     }
     
     public void move(int x, int y) {
-    
+        
         naturalMoveTo(x, y);
-        delay(Constants.i_DELAY);
+        delay(i_DELAY);
     }
     
     public void naturalMoveTo(int xB, int yB) {
-    
+        
         double xA = MouseInfo.getPointerInfo().getLocation().getX();
         double yA = MouseInfo.getPointerInfo().getLocation().getY();
-    
+        
         boolean isLeftToRight      = xB > xA;
         boolean isTopToBottom      = yB > yA;
         double  distance           = Arithmetic.getDistance(xA, yA, xB, yB);
         int     numberOfOverRun    = (int) Math.floor(random.nextInt(2) + 0.5);
         int     numberOfDeviations = getNumberOfDeviations(distance, 0);
-    
+        
         List<Point> pointList = new ArrayList<>();
         pointList.add(new Point((int) xA,
                                 (int) yA));
-    
+        
         generateDeviationsPoints(xB, yB, xA, yA, isLeftToRight, numberOfDeviations, pointList);
-    
+        
         int maximumOverRun = (int) Math.min(150, distance * 0.2 + 1);
-    
+        
         for (int i = 0; i < numberOfOverRun; i++) {
             pointList.add(new Point((int) (xB + random.nextInt(maximumOverRun) - maximumOverRun / 2D),
                                     (int) (yB + random.nextInt(maximumOverRun) - maximumOverRun / 2D)));
             maximumOverRun = maximumOverRun / 2;
         }
-    
+        
         pointList.add(new Point(xB, yB));
-    
+        
         List<Point> mousePositions = generateMousePositions(pointList);
-    
+        
         int    slowDownStartingPoint = 666;
         double increment             = 0.0;
         double incrementStep         = 0.000005;
         double duration              = 0.0;
         double threshold             = 1;
-    
+        
         if (mousePositions.size() < slowDownStartingPoint) {
             for (int i = mousePositions.size(); i < slowDownStartingPoint; i++) {
-    
+                
                 increment += incrementStep / 2;
                 duration += increment;
             }
         }
-    
+        
         for (int i = 0, mousePositionsSize = mousePositions.size(); i < mousePositionsSize; i++) {
             Point point = mousePositions.get(i);
-        
+            
             robot.mouseMove((int) point.getX(),
                             (int) point.getY());
-        
-            if (mousePositions.size() - i < slowDownStartingPoint) {
             
+            if (mousePositions.size() - i < slowDownStartingPoint) {
+                
                 increment += incrementStep;
                 duration += increment;
                 if (duration > 1) {duration = 1;}
-            
+                
                 delay(duration);
             }
         }
@@ -333,6 +333,20 @@ public class Mouse extends Peripheral {
         
         Point point = MouseInfo.getPointerInfo().getLocation();
         move((int) point.getX() + offsetX, (int) point.getY() + offsetY);
+    }
+    
+    public Point waitForClick() {
+        
+        ShowObjects showObjects = new ShowObjects();
+        
+        while (showObjects.mousePosition == null) {
+            robot.delay(i_DELAY);
+//            System.out.println(showObjects.mousePosition);
+        }
+        
+        Point point = showObjects.mousePosition;
+        showObjects.clean();
+        return point;
     }
     
     public void zoomIn(int steps) {
@@ -365,31 +379,33 @@ public class Mouse extends Peripheral {
     
     @NotNull
     private List<Point> generateMousePositions(List<Point> pointList) {
-    
+        
+        boolean windowed = properties.getProperty("ksuto.prh.peripherals.screen", "FULLSCREEN").equals("WINDOWED");
+        
         double m;
         double p;
         double mPrime;
         double pPrime;
         double theta;
-    
+        
         List<Point> mousePositions = new ArrayList<>();
         mousePositions.add(pointList.get(0));
         boolean top = false;
-    
+        
         for (int index = 1; index < pointList.size(); index++) {
-        
+            
             top = !top;
-        
+            
             Point a = pointList.get(index - 1);
             Point b = pointList.get(index); // y = mx + p
-        
+            
             if (a.getX() == (int) b.getX()) {b.setLocation(b.getX() + 1, b.getY());}
             if (a.getY() == (int) b.getY()) {b.setLocation(b.getX(), b.getY() + 1);}
-        
+            
             m = Arithmetic.getPente(a, b);
             p = Arithmetic.getOrdonnee(a, m);
             mPrime = -1 / m;
-        
+            
             if (a.getX() < b.getX()) {
                 for (double x = a.getX(); x < b.getX(); x += 0.01) {
                     generatePositions(m, p, mPrime, mousePositions, a, b, x, top);
@@ -401,6 +417,14 @@ public class Mouse extends Peripheral {
                 }
             }
         }
+        
+        if (windowed) {
+            for (Point position : mousePositions) {
+                if (position.getY() > SCREEN_HEIGHT - 50) {position.y = SCREEN_HEIGHT - 50;}
+                if (position.getY() < 45) {position.y = 40;}
+            }
+        }
+        
         return mousePositions;
     }
     
@@ -414,13 +438,13 @@ public class Mouse extends Peripheral {
         double                  distanceAIntermediatePoint = Arithmetic.getDistance(a.getX(), a.getY(), aPrime.getX(), aPrime.getY());
         double                  distanceFromLine           = Arithmetic.getCircleHeight(distanceAB, distanceAIntermediatePoint, 0.1);
         Arithmetic.PrecisePoint pointAtDistanceOnLine      = Arithmetic.getPointAtDistanceOnLine(aPrime.getX(), aPrime.getY(), mPrime, distanceFromLine, top);
-    
+        
         if (mousePositions.get(mousePositions.size() - 1).getX() != (int) Math.floor(pointAtDistanceOnLine.getX()) ||
             mousePositions.get(mousePositions.size() - 1).getY() != (int) Math.floor(pointAtDistanceOnLine.getY())) {
-        
+            
             mousePositions.add(pointAtDistanceOnLine.toRoundedPoint());
             if (Double.isNaN(pointAtDistanceOnLine.getX()) || Double.isNaN(pointAtDistanceOnLine.getY())) {
-                System.out.println("[ERROR] Position coordinates is Not a Number !");
+                logger.sysOutError("Position coordinates is Not a Number !");
             }
         }
     }
@@ -438,8 +462,8 @@ public class Mouse extends Peripheral {
     
     private boolean minimalDistance(double x, double y, int oldX, int oldY) {
         
-        boolean xCheck = Math.abs(Math.abs(oldX) - Math.abs(x)) >= Constants.i_DRAG_SPACE;
-        boolean yCheck = Math.abs(Math.abs(oldY) - Math.abs(y)) >= Constants.i_DRAG_SPACE;
+        boolean xCheck = Math.abs(Math.abs(oldX) - Math.abs(x)) >= dragSpace;
+        boolean yCheck = Math.abs(Math.abs(oldY) - Math.abs(y)) >= dragSpace;
         
         return xCheck || yCheck;
     }
@@ -449,6 +473,13 @@ public class Mouse extends Peripheral {
         naturalMoveTo(xStart, yStart);
         delay(delay);
         robot.mousePress(buttonMask);
+        delay(delay);
+    }
+    
+    private void press(int iButtonMask, int delay, boolean stopMotion) {
+        
+        if (stopMotion) {delay(250);}
+        robot.mousePress(iButtonMask);
         delay(delay);
     }
     
@@ -466,7 +497,7 @@ public class Mouse extends Peripheral {
         for (int j = 1; j <= steps; j++) {
             
             for (int i = 1; i <= 5; i++) {
-    
+                
                 robot.mouseWheel(wheelAmt);
                 delay(20);
             }

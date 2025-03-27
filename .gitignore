@@ -1,4 +1,6 @@
-*.iml
 .idea/
-out/
-target/
+*.iml
+*.jar
+**/target/
+.vscode
+**/out/

@@ -11,8 +11,8 @@ import java.util.List;
 @Data
 public abstract class LocatedObject {
     
-    public  Integer        precision        = null;
-    public  Double         allowedErrorRate = null;
+//    public  Integer        precision        = null;
+//    public  Double         allowedErrorRate = null;
     private boolean        present          = false;
     private List<Position> positions        = new ArrayList<>();
     private int            width            = 0;
