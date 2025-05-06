@@ -1,6 +1,7 @@
 package fr.ksuto.prh.helpers;
 
 import fr.ksuto.logger.ConsoleLogger;
+import fr.ksuto.prh.entities.AbstractPictureEnum;
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.peripherals.Peripheral;
@@ -8,6 +9,7 @@ import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -115,12 +117,17 @@ public class PictureHelper {
         return closestParameters;
     }
 
-    public static void freeSearch(String[] urls) throws AWTException {
+    public static void freeSearch(AbstractPictureEnum pictureEnum) throws AWTException {
 
-        freeSearch(urls, null);
+        freeSearch(new AbstractPictureEnum[]{pictureEnum});
     }
 
-    public static void freeSearch(String[] urls, Screen.Zone searchZone) throws AWTException {
+    public static void freeSearch(AbstractPictureEnum[] pictureEnums) throws AWTException {
+
+        freeSearch(pictureEnums, null, 0.05, 20);
+    }
+
+    public static void freeSearch(AbstractPictureEnum[] pictureEnums, Screen.Zone searchZone, double errorRate, int precision) throws AWTException {
 
         ConsoleLogger logger = new ConsoleLogger();
 
@@ -131,12 +138,12 @@ public class PictureHelper {
         if (searchZone.getHeight() == 0 || searchZone.getWidth() == 0) return;
 
         PictureSearch pictureSearch = (PictureSearch) new PictureSearch()
-                .addPicturesWithUrls(urls)
+                .addPicturesWithUrls(Arrays.stream(pictureEnums).map(AbstractPictureEnum::getUrl).toArray(String[]::new))
                 .setSearchZone(searchZone)
                 .setShowTargets(true)
                 .setTracking(true)
-                .setAllowedErrorRate(0.05)
-                .setPrecision(20)
+                .setAllowedErrorRate(errorRate)
+                .setPrecision(precision)
                 .startDebug();
 
         while (!pictureSearch.shouldClose()) {
