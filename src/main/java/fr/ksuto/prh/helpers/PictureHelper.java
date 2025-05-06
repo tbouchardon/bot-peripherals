@@ -79,7 +79,7 @@ public class PictureHelper {
                                 (objects.get(0).getWidth() + position.getX()) + ", " +
                                 (objects.get(0).getHeight() + position.getY()));
                     });
-                    logger.sysOutSuccess("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                    logger.sysOutInfo("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
                 }
                 if (seeker.getNumberOfResults() != 0 && (closestParameters == null || Math.abs(numberOfMatches - seeker.getNumberOfResults()) < Math.abs(numberOfMatches - closestParametersMatches))) {
                     closestParametersMatches = seeker.getNumberOfResults();
@@ -88,6 +88,11 @@ public class PictureHelper {
             }
         }
 
+        logger.sysOutInfo("");
+        logger.sysOutInfo("Top 10 best parameters :");
+        top10BestParameters.forEach(parameter -> {
+            logger.sysOutSuccess("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
+        });
         logger.sysOutInfo("");
         if (closestParameters == null) {
             logger.sysOutError("No working parameters found.");
