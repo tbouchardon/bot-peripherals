@@ -90,7 +90,7 @@ public class PictureHelper {
 
         logger.sysOutInfo("");
         if (!top10BestParameters.isEmpty()) {
-            logger.sysOutInfo("Top 10 best parameters :");
+            logger.sysOutSuccess("Top 10 best parameters :");
             top10BestParameters.forEach(parameter -> {
                 logger.sysOutSuccess("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
             });
