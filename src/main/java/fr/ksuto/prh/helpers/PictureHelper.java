@@ -90,13 +90,11 @@ public class PictureHelper {
             }
         }
 
-        logger.sysOutInfo("");
         if (!top10BestParameters.isEmpty()) {
             logger.sysOutSuccess("Top 10 best parameters :");
             top10BestParameters.forEach(parameter -> {
                 logger.sysOutSuccess("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
             });
-            logger.sysOutInfo("");
         }
         if (closestParameters == null) {
             logger.sysOutError("No working parameters found.");

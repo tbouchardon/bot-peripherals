@@ -178,7 +178,6 @@ public class Keyboard extends Peripheral {
     
     public void selectAll() {
         
-        logger.sysOut();
         mousePosition.waitIfUserActive();
         
         robot.keyPress(KeyEvent.VK_CONTROL);

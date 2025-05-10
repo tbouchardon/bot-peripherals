@@ -77,8 +77,6 @@ public class MousePosition {
         
         if (!waitIfUserActive) {return;}
         
-        logger.sysOut();
-        
         while (hasMoved()) {
             updateMousePosition();
             
