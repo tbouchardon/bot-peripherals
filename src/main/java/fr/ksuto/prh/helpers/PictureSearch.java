@@ -134,11 +134,11 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
 
     public void export() {
 
-        System.out.println("PictureSearch objectSearch = (PictureSearch) PictureSearch.getDefault(" + objects.get(0).getHash().replace(".png", "").toUpperCase(Locale.ROOT) + ")");
+        System.out.println("PictureSearch objectSearch = (PictureSearch) PictureSearch.getDefault(" + objects.get(0).getHash().toUpperCase(Locale.ROOT) + ")");
         if (objects.size() > 1) {
             for (int i = 1, objectsSize = objects.size(); i < objectsSize; i++) {
                 Picture object = objects.get(i);
-                System.out.println("        .addPicture(" + object.getHash().replace(".png", "").toUpperCase(Locale.ROOT) + ")");
+                System.out.println("        .addPicture(" + object.getHash().toUpperCase(Locale.ROOT) + ")");
             }
         }
         System.out.println("        .setSearchZone(new Screen.Zone(" + searchZone.getXMin() + ", " + searchZone.getXMax() + ", " + searchZone.getYMin() + ", " + searchZone.getYMax() + "))");

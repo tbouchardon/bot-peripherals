@@ -35,6 +35,6 @@ public class Picture extends LocatedObject {
     @Override
     public String getHash() {
     
-        return path.replaceAll(".*/", "");
+        return path.replaceAll(".*/", "").replace(".png", "");
     }
 }
