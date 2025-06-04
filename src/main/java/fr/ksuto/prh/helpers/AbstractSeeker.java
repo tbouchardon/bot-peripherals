@@ -692,7 +692,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         if (elapsed > 1000) {logger.sysOutWarning(getObjectsHash() + " search took " + elapsed + "ms");}
 
         if (properties.getProperty("ksuto.prh.seeker.writeNotFound", "false").equals("true")) {
-            InOut.writeImage(capturedScreen, ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis() + ".jpg");
+            InOut.writeImage(capturedScreen, ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis());
         }
 
         return this;
