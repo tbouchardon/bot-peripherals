@@ -58,7 +58,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     private S              seeker;
     private boolean        showTargets                = false;
     private boolean        debug                      = false;
-    private boolean        writeNotFound              = false;
+    private boolean        saveCaptureOnNotFound              = false;
     private boolean        clickUntilDisappear        = false;
     private int            iterationsBeforeOptimizing = 10;
     private int            iterationsToKeep           = 50;
@@ -353,8 +353,8 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
 
-    public AbstractSeeker<S, T> writeNotFound() {
-        this.writeNotFound = true;
+    public AbstractSeeker<S, T> saveCaptureOnNotFound() {
+        this.saveCaptureOnNotFound = true;
         return this;
     }
 
@@ -697,7 +697,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed > 1000) {logger.sysOutWarning(getObjectsHash() + " search took " + elapsed + "ms");}
 
-        if (properties.getProperty("ksuto.prh.seeker.writeNotFound", "false").equals("true") || writeNotFound) {
+        if (properties.getProperty("ksuto.prh.seeker.saveCaptureOnNotFound", "false").equals("true") || saveCaptureOnNotFound) {
             InOut.writeImage(capturedScreen, ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis());
         }
 
