@@ -4,3 +4,9 @@
 **/target/
 .vscode
 **/out/
+
+### Gradle ###
+.gradle/
+build/
+.kotlin/
+!gradle/wrapper/gradle-wrapper.jar
