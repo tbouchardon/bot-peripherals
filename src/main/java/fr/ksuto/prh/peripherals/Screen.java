@@ -2,26 +2,17 @@ package fr.ksuto.prh.peripherals;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.commons.helpers.InOut;
 import fr.ksuto.prh.capture.Capture;
 import fr.ksuto.prh.capture.Frame;
-import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.helpers.ColorChecker;
-import fr.ksuto.prh.helpers.PictureSearch;
 import fr.ksuto.prh.research.paralelism.CaptureScheduler;
-import fr.ksuto.prh.tools.ShowObjects;
 import lombok.Data;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 /**
  * Created by TBO on 15/07/2016.
@@ -42,23 +33,6 @@ public class Screen extends Peripheral {
     Screen() throws AWTException {
         
         super();
-    }
-    
-    public static void main(String[] args) throws AWTException {
-        
-        ShowObjects<Picture> showObjects   = new ShowObjects<>();
-        PictureSearch        pictureSearch = new PictureSearch();
-        int                  precision     = 0;
-        pictureSearch.addPictureWithUrl("/test.png")
-                .setPrecision(precision)
-                .setExclusiveZone(5);
-        
-        while (pictureSearch.getObjects().get(0).getPositions().size() < 10) {
-            pictureSearch.search();
-            delay(1000);
-            showObjects.setLocatedObjects(pictureSearch.getObjects());
-            precision++;
-        }
     }
     
     public int numberOfChangedZones(Frame image1, Frame image2, List<Zone> zones) {

@@ -48,12 +48,6 @@ public abstract class AbstractPostgresDatabase {
         testDatabaseConnexion();
     }
     
-    public static void main(String[] args) {
-        
-        Integer monInt = 5;
-        System.out.println(monInt);
-    }
-    
     public String formatDate(Date date) {
         
         return getDatabaseDateFormat().format(date);

@@ -15,15 +15,6 @@ public class SearchHistoryDatabase extends AbstractPostgresDatabase {
         super(database);
     }
     
-    public static void main(String[] args) {
-        
-        SearchHistoryDatabase searchHistoryDatabase = new SearchHistoryDatabase("prh");
-        
-        List<SearchHistory.Parameter> parameters = searchHistoryDatabase.selectSearchParameters("story_autorepeat_checkbox.png");
-        
-        System.out.println(parameters);
-    }
-    
     public SearchHistory createSearchHistory(String hash) {
         
         SearchHistory searchHistory = new SearchHistory(hash);

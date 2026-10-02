@@ -139,10 +139,4 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
         return blockSize >= colorBlock.getMinBlockSize() && blockSize <= colorBlock.getMaxBlockSize();
     }
     
-    public static void main(String[] args) throws AWTException {
-    
-        ColorSearch colorSearch = ColorSearch.getDefault(0, 255, 0, 256, 256);
-        colorSearch.search();
-        colorSearch.getAllResults();
-    }
 }

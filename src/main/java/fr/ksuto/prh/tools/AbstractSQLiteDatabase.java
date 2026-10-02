@@ -42,12 +42,6 @@ public abstract class AbstractSQLiteDatabase {
         }
     }
     
-    public static void main(String[] args) {
-        
-        Integer monInt = 5;
-        System.out.println(monInt);
-    }
-    
     public <T> T queryOneRecordWithRunner(@Language(value = "PostgreSQL") String query, Class<T> type) {
         
         List<T> list = queryRecordListWithRunner(query, type);

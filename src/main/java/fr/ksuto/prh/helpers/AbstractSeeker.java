@@ -23,13 +23,6 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"UnusedReturnValue"})
 public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends LocatedObject> {
 
-    private static final int NOX_MAX_X = 1572;
-    private static final int NOX_MAX_Y = 917;
-    //    private static final Dimension dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    //    private static final int       SCREEN_WIDTH  = (int) dim_D.getWidth();
-    //    private static final int       SCREEN_HEIGHT = (int) dim_D.getHeight();
-    private static final int NOX_MIN_X = 247;
-    private static final int NOX_MIN_Y = 162;
     private final int delay;
     public SearchHistoryDatabase searchHistoryDatabase;
     public SearchHistory searchHistory;
@@ -583,22 +576,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         int amplitudeX = x2 - x1;
         int amplitudeY = y2 - y1;
         int percent = 2;
-        x1 = x1 - amplitudeX / percent;
-        if (x1 < NOX_MIN_X) {
-            x1 = NOX_MIN_X;
-        }
-        x2 = x2 + amplitudeX / percent;
-        if (x2 > NOX_MAX_X) {
-            x2 = NOX_MAX_X;
-        }
-        y1 = y1 - amplitudeY / percent;
-        if (y1 < NOX_MIN_Y) {
-            y1 = NOX_MIN_Y;
-        }
-        y2 = y2 + amplitudeY / percent;
-        if (y2 > NOX_MAX_Y) {
-            y2 = NOX_MAX_Y;
-        }
+        x1 = Math.max(0, x1 - amplitudeX / percent);
+        x2 = Math.min(Screen.SCREEN_WIDTH, x2 + amplitudeX / percent);
+        y1 = Math.max(0, y1 - amplitudeY / percent);
+        y2 = Math.min(Screen.SCREEN_HEIGHT, y2 + amplitudeY / percent);
 
         //        Dimensions maximales des objets
         final int[] maximums = {0, 0};

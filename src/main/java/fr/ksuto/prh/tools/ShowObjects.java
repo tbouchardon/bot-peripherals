@@ -2,7 +2,6 @@ package fr.ksuto.prh.tools;
 
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Position;
-import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
 
 import java.awt.*;
@@ -43,55 +42,6 @@ public class ShowObjects<T extends LocatedObject> extends JFrame {
         
         this.title = title;
         init(zone);
-    }
-    
-    public static void main(String[] args) throws AWTException {
-        
-        ShowObjects showObjects = new ShowObjects();
-        
-        showObjects.countDown(3);
-        
-        List<Position> positions = new ArrayList<>();
-        positions.add(new Position(100, 500));
-        Position position = new Position(200, 400);
-        position.setHasMoved(true);
-        positions.add(position);
-        positions.add(new Position(300, 300));
-        position = new Position(400, 200);
-        position.setExplored(true);
-        positions.add(position);
-        position = new Position(500, 100);
-        position.setExplored(true);
-        position.setHasMoved(true);
-        positions.add(position);
-        
-        List<LocatedObject> locatedObjectlist = new ArrayList<>();
-        LocatedObject locatedObject = new LocatedObject() {
-            
-            @Override
-            public String getHash() {
-                
-                return "null";
-            }
-        };
-        locatedObject.setWidth(10);
-        locatedObject.setHeight(15);
-        locatedObject.setPositions(positions);
-        locatedObjectlist.add(locatedObject);
-        
-        showObjects.setLocatedObjects(locatedObjectlist);
-        
-        while (true) {
-            for (LocatedObject object : locatedObjectlist) {
-                for (Position pos : object.getPositions()) {
-                    pos.setY(pos.getY() + (int) (Math.random() * 3 - 1.5));
-                    pos.setX(pos.getX() + (int) (Math.random() * 3 - 1.5));
-                }
-            }
-            showObjects.setLocatedObjects(locatedObjectlist);
-            Robot robot = new Robot();
-            Peripheral.delay(25);
-        }
     }
     
     public void clean() {

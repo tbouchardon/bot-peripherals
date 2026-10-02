@@ -52,15 +52,6 @@ public class Mouse extends Peripheral {
         random = SecureRandom.getInstanceStrong();
     }
     
-    public static void main(String[] args) throws AWTException, NoSuchAlgorithmException {
-        
-        Mouse mouse = new Mouse();
-        
-        int length = 400;
-        
-        for (int ignore = 0; ignore < 100; ignore++) {mouse.naturalMoveTo(500 + new Random().nextInt(5), 500 + new Random().nextInt(5));}
-    }
-    
     public void clickAlongLine(int numberOf, int x1, int y1, int x2, int y2, int iButtonMask) {
         
         mousePosition.waitIfUserActive();
