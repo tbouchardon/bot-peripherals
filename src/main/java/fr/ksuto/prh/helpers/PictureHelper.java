@@ -1,6 +1,7 @@
 package fr.ksuto.prh.helpers;
 
-import fr.ksuto.logger.ConsoleLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.prh.entities.AbstractPictureEnum;
 import fr.ksuto.prh.entities.LocatedObject;
 import fr.ksuto.prh.entities.Parameter;
@@ -16,6 +17,8 @@ import java.util.List;
 import static fr.ksuto.prh.helpers.ZoneSelector.selectZone;
 
 public class PictureHelper {
+    
+    private static final Logger logger = LoggerFactory.getLogger(PictureHelper.class);
 
     Robot robot = new Robot();
 
@@ -23,8 +26,6 @@ public class PictureHelper {
     }
 
     public static Parameter findWorkingParameters(int numberOfMatches, AbstractSeeker seeker, int numberOfNoChangeLoops) {
-
-        ConsoleLogger logger = new ConsoleLogger();
 
         java.util.List<Parameter> parameters = new ArrayList<>();
         for (double e = 0.0; e <= 0.30; e += 0.05) {
@@ -48,7 +49,7 @@ public class PictureHelper {
                 top10BestParameters.add(parameters.remove(0));
             }
 
-            logger.sysOutTrace("------------------------------------------------------------------------------------------------------------------------");
+            logger.trace("------------------------------------------------------------------------------------------------------------------------");
 
             Iterator<Parameter> iterator = top10BestParameters.iterator();
 
@@ -64,24 +65,24 @@ public class PictureHelper {
 
                 if (spent > 3L * 1000 * 1000 * 1000) {
 
-                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, " + spentString + "s > 3s");
+                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, " + spentString + "s > 3s");
                     iterator.remove();
                     noChangeLoops = 0;
                 } else if (seeker.getNumberOfResults() != numberOfMatches) {
-                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
+                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
                             " " + numberOfMatches);
                     iterator.remove();
                     noChangeLoops = 0;
                 } else {
-                    logger.sysOutInfo("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
+                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
                     objects.get(0).getPositions().forEach(position -> {
-                        logger.sysOutTrace("    Area : " +
+                        logger.trace("    Area : " +
                                 position.getX() + ", " +
                                 position.getY() + ", " +
                                 (objects.get(0).getWidth() + position.getX()) + ", " +
                                 (objects.get(0).getHeight() + position.getY()));
                     });
-                    logger.sysOutInfo("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                    logger.info("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
                 }
                 if (seeker.getNumberOfResults() != 0 && (closestParameters == null || Math.abs(numberOfMatches - seeker.getNumberOfResults()) < Math.abs(numberOfMatches - closestParametersMatches))) {
                     closestParametersMatches = seeker.getNumberOfResults();
@@ -91,23 +92,23 @@ public class PictureHelper {
         }
 
         if (!top10BestParameters.isEmpty()) {
-            logger.sysOutSuccess("Top 10 best parameters :");
+            logger.info("Top 10 best parameters :");
             top10BestParameters.forEach(parameter -> {
-                logger.sysOutSuccess("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
+                logger.info("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
             });
         }
         if (closestParameters == null) {
-            logger.sysOutError("No working parameters found.");
+            logger.error("No working parameters found.");
         } else if (top10BestParameters.isEmpty()) {
-            logger.sysOutWarning("No perfect parameters found, closest match :");
-            logger.sysOutWarning("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
+            logger.warn("No perfect parameters found, closest match :");
+            logger.warn("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
                     ", found " + closestParametersMatches + "/" + " " + numberOfMatches);
         } else {
-            logger.sysOutSuccess("Best match :");
-            logger.sysOutWarning("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
+            logger.info("Best match :");
+            logger.warn("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
         }
         //        if (seeker.hasAnyResults()) {
-        //            logger.sysOutTrace("Positions : ");
+        //            logger.trace("Positions : ");
         //            objects.get(0).getPositions().forEach(position -> {
         //                System.out.println(position.getX() + ":" + position.getY());
         //            });
@@ -126,8 +127,6 @@ public class PictureHelper {
     }
 
     public static void freeSearch(AbstractPictureEnum[] pictureEnums, Screen.Zone searchZone, double errorRate, int precision) throws AWTException {
-
-        ConsoleLogger logger = new ConsoleLogger();
 
         if (searchZone == null) {
             searchZone = selectZone();
@@ -149,9 +148,9 @@ public class PictureHelper {
         }
 
         int numberOfMatches = pictureSearch.getAllPositions().size();
-        if (numberOfMatches >= 1) logger.sysOutSuccess("Found " + numberOfMatches + " matches !");
-        if (numberOfMatches == 0) logger.sysOutWarning("No matches found =(");
-        logger.sysOutInfo("Picture search builder :");
+        if (numberOfMatches >= 1) logger.info("Found " + numberOfMatches + " matches !");
+        if (numberOfMatches == 0) logger.warn("No matches found =(");
+        logger.info("Picture search builder :");
         pictureSearch.export();
         pictureSearch.stopDebug();
 
@@ -169,10 +168,8 @@ public class PictureHelper {
 
     public void pictureHelper(String[] urls, int numberOfMatches, Screen.Zone searchZone, boolean learn) throws AWTException {
 
-        ConsoleLogger logger = new ConsoleLogger();
-
         for (int countDown = 5; countDown >= 0; countDown--) {
-            logger.sysOutInfo("countDown = " + countDown);
+            logger.info("countDown = " + countDown);
             Peripheral.delay(1000);
         }
 

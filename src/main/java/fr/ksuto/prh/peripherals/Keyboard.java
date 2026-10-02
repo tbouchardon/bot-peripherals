@@ -1,6 +1,7 @@
 package fr.ksuto.prh.peripherals;
 
-import fr.ksuto.logger.ConsoleLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -15,8 +16,7 @@ public class Keyboard extends Peripheral {
     
     @Inject
     private MousePosition mousePosition;
-    @Inject
-    private ConsoleLogger logger;
+    private static final Logger logger = LoggerFactory.getLogger(Keyboard.class);
     private int           typingDelay;
     
     Keyboard() throws AWTException {
@@ -191,7 +191,7 @@ public class Keyboard extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        logger.sysOutInfo("typeString(" + strText + ")");
+        logger.info("typeString(" + strText + ")");
         
         for (char cLetter : strText.toCharArray()) {
             

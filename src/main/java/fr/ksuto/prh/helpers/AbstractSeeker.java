@@ -1,8 +1,9 @@
 package fr.ksuto.prh.helpers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.commons.helpers.InOut;
-import fr.ksuto.logger.ConsoleLogger;
 import fr.ksuto.prh.capture.Capture;
 import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.capture.Rgb;
@@ -47,7 +48,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public Screen.Zone searchZone = Screen.Zone.ALL;
     public java.util.List<Screen.Zone> searchZones = new ArrayList<>();
     protected Properties properties;
-    ConsoleLogger logger = new ConsoleLogger();
+    final Logger logger = LoggerFactory.getLogger(getClass());
     private ShowObjects<T> showObjects;
     private S seeker;
     private boolean showTargets = false;
@@ -82,16 +83,14 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public AbstractSeeker<S, T> await(int milliseconds) {
 
         long until = System.currentTimeMillis() + milliseconds;
-        logger.sysOutDebug("Awaiting " + getObjectsHash());
+        logger.debug("Awaiting " + getObjectsHash());
         while (System.currentTimeMillis() < until) {
-            logger.sysOutDebug("\rTime's up : " + (int) Math.floor((until - System.currentTimeMillis()) / 1000f) + "s    ");
+            logger.debug("Time's up : " + (int) Math.floor((until - System.currentTimeMillis()) / 1000f) + "s    ");
             search();
             if (hasAnyResults() && (expectedResults == null || getNumbreOfResults() == expectedResults)) {
-                System.out.println(" ");
                 return this;
             }
         }
-        System.out.println(" ");
 
         clean();
 
@@ -633,13 +632,13 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             setAllowedErrorRate(param.getErrorRate());
             learningSearch();
 
-            logger.sysOutTrace("param.getErrorRate() = " + param.getErrorRate() + ", param.getPrecision() = " + param.getPrecision());
+            logger.trace("param.getErrorRate() = " + param.getErrorRate() + ", param.getPrecision() = " + param.getPrecision());
 
             if (objects.get(0).getPositions().size() != numberOfMatches) {
                 iterator.remove();
             } else {
                 if (debug) {
-                    logger.sysOutTrace("   > OPTIMIZING <   ");
+                    logger.trace("   > OPTIMIZING <   ");
                 }
                 for (Position position : objects.get(0).getPositions()) {
                     addPositionAndOptimize(position, false);
@@ -684,7 +683,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         if ((learning || precision == null || allowedErrorRate == null) && !learningSearch) {
 
             if (debug && learning) {
-                logger.sysOutTrace(">>>> LEARNING <<<<");
+                logger.trace(">>>> LEARNING <<<<");
             }
 
             java.util.List<Parameter> parameters = Parameter.fromDTOs(searchHistoryDatabase.selectSearchParameters(searchHistory.getHash()));
@@ -704,7 +703,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 for (; currentPosition.getX() < searchZone.getWidth() - (object.getWidth() + exclusiveZone); currentPosition.incX()) {
 
                     while (overlapingExists(currentPosition)) {
-                        //                        logger.sysOutTrace("overlapping: x =" + currentPosition.getX() +", y =" + currentPosition.getY());
+                        //                        logger.trace("overlapping: x =" + currentPosition.getX() +", y =" + currentPosition.getY());
                         currentPosition.setX(currentPosition.getX() + exclusiveZone * 2 + object.getWidth());
                     }
 
@@ -713,7 +712,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                     if (found && optimizing && !learningSearch) {
 
                         if (debug) {
-                            System.out.print(" >>>> OPTIMIZING");
+                            logger.debug(">>>> OPTIMIZING");
                         }
 
                         addPositionAndOptimize(currentPosition, true);
@@ -736,7 +735,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
         long elapsed = System.currentTimeMillis() - startTime;
         if (elapsed > 1000) {
-            logger.sysOutWarning(getObjectsHash() + " search took " + elapsed + "ms");
+            logger.warn(getObjectsHash() + " search took " + elapsed + "ms");
         }
 
         if (properties.getProperty("ksuto.prh.seeker.saveCaptureOnNotFound", "false").equals("true") || saveCaptureOnNotFound) {

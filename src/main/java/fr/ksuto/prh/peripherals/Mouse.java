@@ -1,7 +1,8 @@
 package fr.ksuto.prh.peripherals;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.commons.math.Arithmetic;
-import fr.ksuto.logger.ConsoleLogger;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.entities.Position;
 import fr.ksuto.prh.helpers.PictureSearch;
@@ -35,8 +36,7 @@ public class Mouse extends Peripheral {
     private static final int       SCREEN_WIDTH         = (int) SCREEN_DIMENSION.getWidth();
     private static final double    START_X              = (SCREEN_WIDTH / 2d);
     private final        Random    random;
-    @Inject
-    ConsoleLogger logger;
+    private static final Logger logger = LoggerFactory.getLogger(Mouse.class);
     @Inject
     private Screen        screen;
     @Inject
@@ -93,7 +93,7 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        logger.sysOutTrace(x + ", " + y + ")");
+        logger.trace(x + ", " + y + ")");
         
         naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
@@ -111,7 +111,7 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        logger.sysOutTrace(x + ", " + y + ")");
+        logger.trace(x + ", " + y + ")");
         
         naturalMoveTo(x, y);
         mousePosition.updateMousePosition();
@@ -122,7 +122,7 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        logger.sysOutTrace("String[] sImage)");
+        logger.trace("String[] sImage)");
         
         return clickThing(sImage, 0, 0);
     }
@@ -131,9 +131,9 @@ public class Mouse extends Peripheral {
         
         mousePosition.waitIfUserActive();
         
-        logger.sysOutTrace("sImage, " + xOffset + ", " + yOffset + ")");
+        logger.trace("sImage, " + xOffset + ", " + yOffset + ")");
         
-        logger.sysOutTrace("Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
+        logger.trace("Trying to click '" + sImage[0] + "', Offsets : x=" + xOffset + ", y=" + yOffset);
         
         ArrayList<int[]> alFound;
         
@@ -144,7 +144,7 @@ public class Mouse extends Peripheral {
             
             if (pictureSearch.hasAnyResults()) {
                 for (Picture picture : pictureSearch.getObjects()) {
-                    logger.sysOutTrace(picture.getReferenceImage() + " Found");
+                    logger.trace(picture.getReferenceImage() + " Found");
                     if (picture.isPresent()) {
                         for (Position position : picture.getPositions()) {
                             clickLeft(position.getX() + 3 + xOffset, position.getY() + 3 + yOffset);
@@ -444,7 +444,7 @@ public class Mouse extends Peripheral {
             
             mousePositions.add(pointAtDistanceOnLine.toRoundedPoint());
             if (Double.isNaN(pointAtDistanceOnLine.getX()) || Double.isNaN(pointAtDistanceOnLine.getY())) {
-                logger.sysOutError("Position coordinates is Not a Number !");
+                logger.error("Position coordinates is Not a Number !");
             }
         }
     }

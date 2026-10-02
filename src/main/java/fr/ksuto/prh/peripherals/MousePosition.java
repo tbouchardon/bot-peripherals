@@ -1,6 +1,7 @@
 package fr.ksuto.prh.peripherals;
 
-import fr.ksuto.logger.ConsoleLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.prh.entities.PositionXY;
 
 import java.awt.*;
@@ -22,8 +23,7 @@ public class MousePosition {
     @Inject
     private Screen  screen;
     
-    @Inject
-    private ConsoleLogger logger;
+    private static final Logger logger = LoggerFactory.getLogger(MousePosition.class);
     
     private int   xPos;
     private int   yPos;

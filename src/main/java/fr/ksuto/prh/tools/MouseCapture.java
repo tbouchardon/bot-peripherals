@@ -1,6 +1,7 @@
 package fr.ksuto.prh.tools;
 
-import fr.ksuto.logger.ConsoleLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.prh.entities.PositionXY;
 import fr.ksuto.prh.peripherals.MousePosition;
 
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class MouseCapture {
     
-    final ConsoleLogger logger = new ConsoleLogger();
+    private static final Logger logger = LoggerFactory.getLogger(MouseCapture.class);
     
     public MouseCapture() {
         
@@ -62,7 +63,7 @@ public abstract class MouseCapture {
                     frame.dispose();
                 }
                 catch (AWTException ex) {
-                    logger.sysOutError("Error getting mouse position");
+                    logger.error("Error getting mouse position");
                 }
             }
         });

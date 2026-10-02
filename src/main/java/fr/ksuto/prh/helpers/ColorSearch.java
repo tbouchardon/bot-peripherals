@@ -41,7 +41,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     @Override
     public AbstractSeeker<ColorSearch, ColorBlock> findWorkingParameters(int numberOfMatches, int numberOfNoChangeLoops) {
         
-        logger.sysOutError("Method not implemented !");
+        logger.error("Method not implemented !");
         
         return null;
     }

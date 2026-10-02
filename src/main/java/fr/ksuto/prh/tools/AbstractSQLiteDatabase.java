@@ -1,6 +1,7 @@
 package fr.ksuto.prh.tools;
 
-import fr.ksuto.logger.ConsoleLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -19,7 +20,7 @@ import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.intellij.lang.annotations.Language;
 
 public abstract class AbstractSQLiteDatabase {
-    ConsoleLogger logger = new ConsoleLogger();
+    final Logger logger = LoggerFactory.getLogger(getClass());
     
     String database;
     String url;
@@ -33,11 +34,11 @@ public abstract class AbstractSQLiteDatabase {
         try (Connection conn = DriverManager.getConnection(this.url)) {
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                logger.sysOutInfo("the driver name is " + meta.getDriverName());
+                logger.info("the driver name is " + meta.getDriverName());
             }
         }
         catch (SQLException e) {
-            logger.sysOutError("" + e.getMessage());
+            logger.error("" + e.getMessage());
         }
     }
     
@@ -64,7 +65,7 @@ public abstract class AbstractSQLiteDatabase {
             return queryRunner.query(connection, query, new ScalarHandler<T>());
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -80,7 +81,7 @@ public abstract class AbstractSQLiteDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -95,7 +96,7 @@ public abstract class AbstractSQLiteDatabase {
             else {statement.executeUpdate(query);}
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
     
         return null;

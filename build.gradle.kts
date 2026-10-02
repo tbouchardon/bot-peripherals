@@ -7,7 +7,7 @@ version = "2.2.0"
 
 dependencies {
     api(libs.guice)
-    api(libs.ksuto.logger)
+    api(libs.slf4j.api)
     api(libs.ksuto.commons)
     implementation(libs.postgresql)
     implementation(libs.commons.dbutils)

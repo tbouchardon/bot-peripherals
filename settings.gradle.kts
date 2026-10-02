@@ -9,4 +9,3 @@ plugins {
 rootProject.name = "peripherals"
 
 includeBuild("../Commons")
-includeBuild("../Logger")

@@ -1,8 +1,9 @@
 package fr.ksuto.prh.peripherals;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.commons.helpers.InOut;
-import fr.ksuto.logger.ConsoleLogger;
 import fr.ksuto.prh.capture.Capture;
 import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.entities.Picture;
@@ -28,7 +29,7 @@ import javax.imageio.ImageIO;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class Screen extends Peripheral {
     
-    ConsoleLogger logger = new ConsoleLogger();
+    private static final Logger logger = LoggerFactory.getLogger(Screen.class);
     
     public static final Dimension        dim_D         = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
     public static final int              SCREEN_HEIGHT = (int) dim_D.getHeight();
@@ -111,7 +112,7 @@ public class Screen extends Peripheral {
             
             numberOfChangedZones = numberOfChangedZones(image1, image2, zones);
             if (System.currentTimeMillis() > startTime + (maxWaitingMilliseconds == null ? 60 * 1000 : maxWaitingMilliseconds)) {
-                logger.sysOutDebug("Things should have changed but nothing happened");
+                logger.debug("Things should have changed but nothing happened");
                 break;
             }
         }
@@ -144,7 +145,7 @@ public class Screen extends Peripheral {
         for (int x = zone.xMin; x < zone.xMax; x++) {
             for (int y = zone.yMin; y < zone.yMax; y++) {
                 if (image1.rgb(x, y) != image2.rgb(x, y)) {
-                    logger.sysOutTrace("Change : x = " + x + ", y = " + y);
+                    logger.trace("Change : x = " + x + ", y = " + y);
                     return true;
                 }
             }

@@ -1,7 +1,8 @@
 package fr.ksuto.prh.tools;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import fr.ksuto.commons.PropertiesLoader;
-import fr.ksuto.logger.ConsoleLogger;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -23,7 +24,7 @@ import org.intellij.lang.annotations.Language;
 public abstract class AbstractPostgresDatabase {
     
     private final Properties properties;
-    ConsoleLogger logger = new ConsoleLogger();
+    final Logger logger = LoggerFactory.getLogger(getClass());
     String        database;
     String        url;
     
@@ -70,7 +71,7 @@ public abstract class AbstractPostgresDatabase {
             return queryRunner.query(connection, query, new ScalarHandler<T>());
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -100,7 +101,7 @@ public abstract class AbstractPostgresDatabase {
             return queryRunner.query(connection, query, beanListHandler);
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -128,7 +129,7 @@ public abstract class AbstractPostgresDatabase {
             //            }
         }
         catch (SQLException e) {
-            logger.sysOutError("Query failure : " + e.getMessage());
+            logger.error("Query failure : " + e.getMessage());
         }
         
         return null;
@@ -145,7 +146,7 @@ public abstract class AbstractPostgresDatabase {
             }
         }
         catch (SQLException e) {
-            logger.sysOutError("" + e.getMessage());
+            logger.error("" + e.getMessage());
         }
     }
     
