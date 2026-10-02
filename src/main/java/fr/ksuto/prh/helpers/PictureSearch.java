@@ -1,12 +1,12 @@
 package fr.ksuto.prh.helpers;
 
+import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.entities.AbstractPictureEnum;
 import fr.ksuto.prh.entities.Parameter;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.entities.Position;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.Locale;
 
@@ -65,13 +65,13 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
     }
 
     @Override
-    boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, Picture object) {
+    boolean isObjectFound(Frame capturedScreen, Position currentPosition, Picture object) {
 
         return isPictureFound(capturedScreen, object, currentPosition);
     }
 
     @Override
-    boolean searchObject(BufferedImage capturedScreen, Position currentPosition, Picture picture) {
+    boolean searchObject(Frame capturedScreen, Position currentPosition, Picture picture) {
 
         if (isPictureFound(capturedScreen, picture, currentPosition)) {
 
@@ -149,19 +149,21 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
 
     }
 
-    private boolean isPictureFound(BufferedImage capturedScreen, Picture picture, Position currentPosition) {
+    private boolean isPictureFound(Frame capturedScreen, Picture picture, Position currentPosition) {
 
-        if (picture.getReferenceImage().getHeight() + currentPosition.getY() >= capturedScreen.getHeight()) {
+        Frame reference = picture.getReferenceFrame();
+
+        if (reference.height() + currentPosition.getY() >= capturedScreen.height()) {
             return false;
         }
-        if (picture.getReferenceImage().getWidth() + currentPosition.getX() >= capturedScreen.getWidth()) {
+        if (reference.width() + currentPosition.getX() >= capturedScreen.width()) {
             return false;
         }
 
         int tempCapturedRGB;
-        int refRGB = picture.getReferenceImage().getRGB(0, 0);
-        int capturedRGB = capturedScreen.getRGB(currentPosition.getX(), currentPosition.getY());
-        double area = (double) picture.getReferenceImage().getHeight() * (double) picture.getReferenceImage().getWidth();
+        int refRGB = reference.rgb(0, 0);
+        int capturedRGB = capturedScreen.rgb(currentPosition.getX(), currentPosition.getY());
+        double area = (double) reference.height() * (double) reference.width();
         double errorNumber = 0;
 
         boolean found = false;
@@ -171,12 +173,12 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
             found = true;
 
             yxLoop:
-            for (int yRef = 0; yRef < picture.getReferenceImage().getHeight(); yRef++) {
+            for (int yRef = 0; yRef < reference.height(); yRef++) {
 
-                for (int xRef = 0; xRef < picture.getReferenceImage().getWidth(); xRef++) {
+                for (int xRef = 0; xRef < reference.width(); xRef++) {
 
-                    tempCapturedRGB = capturedScreen.getRGB(xRef + currentPosition.getX(), yRef + currentPosition.getY());
-                    refRGB = picture.getReferenceImage().getRGB(xRef, yRef);
+                    tempCapturedRGB = capturedScreen.rgb(xRef + currentPosition.getX(), yRef + currentPosition.getY());
+                    refRGB = reference.rgb(xRef, yRef);
 
                     boolean match = isMatch(tempCapturedRGB, refRGB);
                     if (!match) {

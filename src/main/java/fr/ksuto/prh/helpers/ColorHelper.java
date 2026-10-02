@@ -1,12 +1,14 @@
 package fr.ksuto.prh.helpers;
 
 import fr.ksuto.commons.awt.Painter;
+import fr.ksuto.prh.capture.Capture;
+import fr.ksuto.prh.capture.Frame;
+import fr.ksuto.prh.capture.Rgb;
 import fr.ksuto.prh.entities.Position;
 import fr.ksuto.prh.peripherals.Screen;
 import lombok.NoArgsConstructor;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,23 +19,12 @@ public class ColorHelper {
         
         List<Position> positions = new ArrayList<>();
         
-        Robot robot = new Robot();
+        Frame capturedScreen = Capture.zone(Screen.Zone.ALL);
         
-        BufferedImage capturedScreen = robot.createScreenCapture(Screen.Zone.ALL.getRectangle());
-        
-        for (int x = 0; x < capturedScreen.getWidth(); x++) {
-            for (int y = 0; y < capturedScreen.getHeight(); y++) {
+        for (int x = 0; x < capturedScreen.width(); x++) {
+            for (int y = 0; y < capturedScreen.height(); y++) {
                 
-                int capturedRGB = capturedScreen.getRGB(x, y);
-                int capturedB   = (capturedRGB) & 0xFF;
-                int capturedG   = (capturedRGB >> 8) & 0xFF;
-                int capturedR   = (capturedRGB >> 16) & 0xFF;
-                
-                boolean match = r > capturedR - precision && r < capturedR + precision &&
-                                g > capturedG - precision && g < capturedG + precision &&
-                                b > capturedB - precision && b < capturedB + precision;
-                
-                if (match) {positions.add(new Position(x, y));}
+                if (Rgb.isClose(capturedScreen.rgb(x, y), r, g, b, precision)) {positions.add(new Position(x, y));}
             }
         }
         

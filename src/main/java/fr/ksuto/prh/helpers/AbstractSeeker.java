@@ -3,6 +3,9 @@ package fr.ksuto.prh.helpers;
 import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.commons.helpers.InOut;
 import fr.ksuto.logger.ConsoleLogger;
+import fr.ksuto.prh.capture.Capture;
+import fr.ksuto.prh.capture.Frame;
+import fr.ksuto.prh.capture.Rgb;
 import fr.ksuto.prh.entities.*;
 import fr.ksuto.prh.peripherals.Mouse;
 import fr.ksuto.prh.peripherals.Peripheral;
@@ -11,7 +14,6 @@ import fr.ksuto.prh.tools.SearchHistoryDatabase;
 import fr.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
@@ -434,27 +436,14 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
     boolean isMatch(int capturedRGB, int refRGB) {
 
-        boolean match = capturedRGB == refRGB;
-
-        if (getPrecision() != 0) {
-
-            int imgB = (capturedRGB) & 0xFF;
-            int imgG = (capturedRGB >> 8) & 0xFF;
-            int imgR = (capturedRGB >> 16) & 0xFF;
-
-            int refB = (refRGB) & 0xFF;
-            int refG = (refRGB >> 8) & 0xFF;
-            int refR = (refRGB >> 16) & 0xFF;
-
-            match = imgR > refR - getPrecision() && imgR < refR + getPrecision() &&
-                    imgG > refG - getPrecision() && imgG < refG + getPrecision() &&
-                    imgB > refB - getPrecision() && imgB < refB + getPrecision();
+        if (getPrecision() == 0) {
+            return capturedRGB == refRGB;
         }
 
-        return match;
+        return Rgb.isClose(capturedRGB, refRGB, getPrecision());
     }
 
-    abstract boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, T object);
+    abstract boolean isObjectFound(Frame capturedScreen, Position currentPosition, T object);
 
     boolean overlapingExists(Position currentPosition) {
 
@@ -473,9 +462,9 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return false;
     }
 
-    abstract boolean searchObject(BufferedImage capturedScreen, Position currentPosition, T object);
+    abstract boolean searchObject(Frame capturedScreen, Position currentPosition, T object);
 
-    void updatePositions(BufferedImage capturedScreen) {
+    void updatePositions(Frame capturedScreen) {
 
         for (T object : objects) {
 
@@ -491,10 +480,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 boolean objectFound = false;
 
                 for (; currentPosition.getY() < position.getY() + object.getHeight() + exclusiveZone + maximumMovement &&
-                        currentPosition.getY() < capturedScreen.getHeight(); currentPosition.incY()) {
+                        currentPosition.getY() < capturedScreen.height(); currentPosition.incY()) {
                     currentPosition.setX(Math.max(0, position.getX() - exclusiveZone - maximumMovement));
                     for (; currentPosition.getX() < position.getX() + object.getWidth() + exclusiveZone + maximumMovement &&
-                            currentPosition.getX() < capturedScreen.getWidth(); currentPosition.incX()) {
+                            currentPosition.getX() < capturedScreen.width(); currentPosition.incX()) {
 
                         objectFound = isObjectFound(capturedScreen, currentPosition, object);
 
@@ -678,10 +667,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             hidedObjects = true;
         }
 
-        BufferedImage capturedScreen = robot.createScreenCapture(searchZone.getRectangle());
+        Frame capturedScreen = Capture.zone(searchZone.getRectangle());
 
         if (debug) {
-            InOut.writeImage(capturedScreen, "image");
+            InOut.writeImage(capturedScreen.image(), "image");
         }
 
         if (hidedObjects) {
@@ -751,7 +740,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         }
 
         if (properties.getProperty("ksuto.prh.seeker.saveCaptureOnNotFound", "false").equals("true") || saveCaptureOnNotFound) {
-            InOut.writeImage(capturedScreen, ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis() + ".png");
+            InOut.writeImage(capturedScreen.image(), ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis() + ".png");
         }
 
         return this;

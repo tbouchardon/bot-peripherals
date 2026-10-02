@@ -1,17 +1,16 @@
 package fr.ksuto.prh.helpers;
 
-import fr.ksuto.prh.peripherals.Screen;
+import fr.ksuto.prh.capture.Capture;
+import fr.ksuto.prh.capture.Frame;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class ColorChecker {
     
     int           x     = 1;
     int           y     = 1;
-    BufferedImage capturedScreen;
+    Frame         capturedScreen;
     int           color;
-    Robot         robot = new Robot();
     
     public ColorChecker() throws AWTException {}
     
@@ -25,14 +24,14 @@ public class ColorChecker {
     
     public boolean check() {
         
-        if (capturedScreen == null) { capturedScreen = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT)); }
+        if (capturedScreen == null) { capturedScreen = Capture.screen(); }
         
-        int iCapturedRGB = capturedScreen.getRGB(x, y);
+        int iCapturedRGB = capturedScreen.rgb(x, y);
         // Debug.sysOut("Peripheral > (" + x + ", " + y + ") Searching : " + color + ", found : " + iCapturedRGB + ".");
         return (color == iCapturedRGB);
     }
     
-    public ColorChecker setCapturedScreen(BufferedImage biCapturedScreen) {
+    public ColorChecker setCapturedScreen(Frame biCapturedScreen) {
         
         this.capturedScreen = biCapturedScreen;
         

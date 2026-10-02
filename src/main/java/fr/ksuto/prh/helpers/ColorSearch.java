@@ -1,10 +1,11 @@
 package fr.ksuto.prh.helpers;
 
+import fr.ksuto.prh.capture.Frame;
+import fr.ksuto.prh.capture.Rgb;
 import fr.ksuto.prh.entities.ColorBlock;
 import fr.ksuto.prh.entities.Position;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     
@@ -52,7 +53,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     @Override
-    boolean searchObject(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
+    boolean searchObject(Frame capturedScreen, Position currentPosition, ColorBlock colorBlock) {
         
         if (isBlockFound(capturedScreen, currentPosition, colorBlock)) {
             
@@ -69,7 +70,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
     }
     
     @Override
-    boolean isObjectFound(BufferedImage capturedScreen, Position currentPosition, ColorBlock object) {
+    boolean isObjectFound(Frame capturedScreen, Position currentPosition, ColorBlock object) {
         
         return isBlockFound(capturedScreen, currentPosition, object);
     }
@@ -88,41 +89,36 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
         return this;
     }
     
-    private boolean isBlockFound(BufferedImage capturedScreen, Position currentPosition, ColorBlock colorBlock) {
+    private boolean isBlockFound(Frame capturedScreen, Position currentPosition, ColorBlock colorBlock) {
         
-        if (currentPosition.getY() >= capturedScreen.getHeight()) {return false;}
-        if (currentPosition.getX() >= capturedScreen.getWidth()) {return false;}
+        if (currentPosition.getY() >= capturedScreen.height()) {return false;}
+        if (currentPosition.getX() >= capturedScreen.width()) {return false;}
         
-        int r, g, b;
         int xDelta    = 0, yDelta = 0;
         int blockSize = 0;
         
         while (true) {
             
-            int capturedRGB = capturedScreen.getRGB(currentPosition.getX() + xDelta, currentPosition.getY() + yDelta);
-            b = (capturedRGB) & 0xFF;
-            g = (capturedRGB >> 8) & 0xFF;
-            r = (capturedRGB >> 16) & 0xFF;
+            int capturedRGB = capturedScreen.rgb(currentPosition.getX() + xDelta, currentPosition.getY() + yDelta);
             
             boolean match;
             if (precision != null) {
                 
-                match = r > colorBlock.getRed() - precision && r < colorBlock.getRed() + precision &&
-                        g > colorBlock.getGreen() - precision && g < colorBlock.getGreen() + precision &&
-                        b > colorBlock.getBlue() - precision && b < colorBlock.getBlue() + precision;
+                match = Rgb.isClose(capturedRGB, colorBlock.getRed(), colorBlock.getGreen(), colorBlock.getBlue(), precision);
             }
             else {
                 
-                match = r == colorBlock.getRed() && g == colorBlock.getGreen() && b == colorBlock.getBlue();
+                match = (capturedRGB & 0xFFFFFF) == (Rgb.of(colorBlock.getRed(), colorBlock.getGreen(), colorBlock.getBlue()) & 0xFFFFFF);
             }
             
             if (match) {
                 
                 blockSize += 1;
                 xDelta++;
-                if (currentPosition.getX() + xDelta >= capturedScreen.getWidth()) {
+                if (currentPosition.getX() + xDelta >= capturedScreen.width()) {
                     xDelta = 0;
                     yDelta++;
+                    if (currentPosition.getY() + yDelta >= capturedScreen.height()) {break;}
                 }
             }
             else {
@@ -133,7 +129,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
                 
                 xDelta = 0;
                 yDelta++;
-                if (currentPosition.getY() >= capturedScreen.getHeight()) {break;}
+                if (currentPosition.getY() + yDelta >= capturedScreen.height()) {break;}
             }
         }
         if (blockSize > colorBlock.getSize()) {colorBlock.setSize(blockSize);}

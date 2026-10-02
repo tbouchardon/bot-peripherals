@@ -3,6 +3,8 @@ package fr.ksuto.prh.peripherals;
 import fr.ksuto.commons.PropertiesLoader;
 import fr.ksuto.commons.helpers.InOut;
 import fr.ksuto.logger.ConsoleLogger;
+import fr.ksuto.prh.capture.Capture;
+import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.entities.Picture;
 import fr.ksuto.prh.helpers.ColorChecker;
 import fr.ksuto.prh.helpers.PictureSearch;
@@ -58,7 +60,7 @@ public class Screen extends Peripheral {
         }
     }
     
-    public int numberOfChangedZones(BufferedImage image1, BufferedImage image2, List<Zone> zones) {
+    public int numberOfChangedZones(Frame image1, Frame image2, List<Zone> zones) {
         
         int numberOfChangedZones = 0;
         
@@ -92,10 +94,10 @@ public class Screen extends Peripheral {
     
     public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds, boolean debug) {
         
-        BufferedImage image1 = robot.createScreenCapture(Zone.ALL.getRectangle());
-        BufferedImage image2;
+        Frame image1 = Capture.screen();
+        Frame image2;
         
-        if (debug) {InOut.writeImage(image1, System.currentTimeMillis() + "_base");}
+        if (debug) {InOut.writeImage(image1.image(), System.currentTimeMillis() + "_base");}
         
         int numberOfChangedZones;
         
@@ -103,9 +105,9 @@ public class Screen extends Peripheral {
         
         do {
             delay(msDelay == null ? 250 : msDelay);
-            image2 = robot.createScreenCapture(Zone.ALL.getRectangle());
+            image2 = Capture.screen();
             
-            if (debug) {InOut.writeImage(image2, System.currentTimeMillis() + "_comparingTo");}
+            if (debug) {InOut.writeImage(image2.image(), System.currentTimeMillis() + "_comparingTo");}
             
             numberOfChangedZones = numberOfChangedZones(image1, image2, zones);
             if (System.currentTimeMillis() > startTime + (maxWaitingMilliseconds == null ? 60 * 1000 : maxWaitingMilliseconds)) {
@@ -137,11 +139,11 @@ public class Screen extends Peripheral {
         while (isMoving()) {delay(200);}
     }
     
-    public boolean zoneHasChanged(BufferedImage image1, BufferedImage image2, Zone zone) {
+    public boolean zoneHasChanged(Frame image1, Frame image2, Zone zone) {
         
         for (int x = zone.xMin; x < zone.xMax; x++) {
             for (int y = zone.yMin; y < zone.yMax; y++) {
-                if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+                if (image1.rgb(x, y) != image2.rgb(x, y)) {
                     logger.sysOutTrace("Change : x = " + x + ", y = " + y);
                     return true;
                 }
@@ -155,26 +157,26 @@ public class Screen extends Peripheral {
         return captureScheduler;
     }
     
-    public BufferedImage getLastCapture() {
+    public Frame getLastCapture() {
         
-        return captureScheduler.getLastImage();
+        return captureScheduler.getLastFrame();
     }
     
     public boolean isMoving() {
         
-        BufferedImage screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
+        Frame screenCapture = Capture.screen();
         
-        int initialPixelColor1 = screenCapture.getRGB(screenCapture.getWidth() / 2 - 100, screenCapture.getHeight() / 2 - 100);
-        int initialPixelColor2 = screenCapture.getRGB(screenCapture.getWidth() / 2, screenCapture.getHeight() / 2);
-        int initialPixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
+        int initialPixelColor1 = screenCapture.rgb(screenCapture.width() / 2 - 100, screenCapture.height() / 2 - 100);
+        int initialPixelColor2 = screenCapture.rgb(screenCapture.width() / 2, screenCapture.height() / 2);
+        int initialPixelColor3 = screenCapture.rgb(screenCapture.width() / 2 + 100, screenCapture.height() / 2 + 100);
         
         delay(200);
         
-        screenCapture = robot.createScreenCapture(new Rectangle(0, 0, Screen.SCREEN_WIDTH, Screen.SCREEN_HEIGHT));
+        screenCapture = Capture.screen();
         
-        int pixelColor1 = screenCapture.getRGB(screenCapture.getWidth() / 2 - 100, screenCapture.getHeight() / 2 - 100);
-        int pixelColor2 = screenCapture.getRGB(screenCapture.getWidth() / 2, screenCapture.getHeight() / 2);
-        int pixelColor3 = screenCapture.getRGB(screenCapture.getWidth() / 2 + 100, screenCapture.getHeight() / 2 + 100);
+        int pixelColor1 = screenCapture.rgb(screenCapture.width() / 2 - 100, screenCapture.height() / 2 - 100);
+        int pixelColor2 = screenCapture.rgb(screenCapture.width() / 2, screenCapture.height() / 2);
+        int pixelColor3 = screenCapture.rgb(screenCapture.width() / 2 + 100, screenCapture.height() / 2 + 100);
         
         return pixelColor1 != initialPixelColor1 &&
                pixelColor2 != initialPixelColor2;
