@@ -93,11 +93,21 @@ Lecture de tous les pixels d'une capture plein écran : `BufferedImage.getRGB` 8
   plus rien, `CaptureScheduler` devient inutile avec DXGI.
 - Fenêtres en plein écran exclusif : non testé. WoW en fenêtré maximisé n'est pas concerné.
 
+## Moyen par défaut
+
+Depuis ces mesures, `Capture` choisit le moyen à la première capture :
+- **sous Windows, DXGI**, enveloppé dans `FallbackCaptureBackend` : si une capture DXGI échoue (session verrouillée,
+  changement de mode d'affichage, Direct3D indisponible), elle est faite par Robot, et DXGI est réessayé 5 s plus tard ;
+- **ailleurs, Robot** ;
+- la propriété système `ksuto.capture` impose un moyen : `dxgi`, `gdi` ou `robot`.
+
+Tous les bots qui passent par `Capture` en profitent sans modification. Sans `--enable-native-access=ALL-UNNAMED`, Java
+affiche un avertissement au premier appel natif, mais la capture fonctionne (Java 25). Vérifié sous Windows : le moyen
+par défaut est bien `FallbackCaptureBackend` (DXGI), avec ou sans l'option.
+
 ## Prochaines étapes
 
-1. **Faire de DXGI le moyen par défaut** sous Windows, avec repli sur Robot si Direct3D est indisponible, puis
-   l'utiliser dans ClockWork.
-2. Provoquer une perte de duplication (verrouillage, changement de résolution) pendant une capture pour vérifier la
+1. Provoquer une perte de duplication (verrouillage, changement de résolution) pendant une capture pour vérifier la
    recréation automatique.
 
 ## Relancer les mesures

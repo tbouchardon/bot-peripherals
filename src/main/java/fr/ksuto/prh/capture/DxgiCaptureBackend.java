@@ -79,7 +79,7 @@ public class DxgiCaptureBackend implements CaptureBackend, AutoCloseable {
                                                        .getDefaultConfiguration().getDefaultTransform();
         scaleX = transform.getScaleX();
         scaleY = transform.getScaleY();
-        open();
+        // Duplication ouverte à la première capture : la session peut être verrouillée au démarrage
     }
 
     @Override
@@ -90,6 +90,7 @@ public class DxgiCaptureBackend implements CaptureBackend, AutoCloseable {
         int width  = (int) Math.round(screenZone.width * scaleX);
         int height = (int) Math.round(screenZone.height * scaleY);
 
+        if (duplication == null) {open();} // duplication perdue et pas encore recréée (session verrouillée...)
         refresh();
 
         BufferedImage image  = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
