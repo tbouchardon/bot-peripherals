@@ -15,6 +15,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.LockSupport;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -272,38 +273,70 @@ public class Mouse extends Peripheral {
         pointList.add(new Point(xB, yB));
         
         List<Point> mousePositions = generateMousePositions(pointList);
-        
-        int    slowDownStartingPoint = 666;
-        double increment             = 0.0;
-        double incrementStep         = 0.000005;
-        double duration              = 0.0;
-        double threshold             = 1;
-        
-        if (mousePositions.size() < slowDownStartingPoint) {
-            for (int i = mousePositions.size(); i < slowDownStartingPoint; i++) {
-                
-                increment += incrementStep / 2;
-                duration += increment;
-            }
+
+        // Parcours piloté par le temps, comme un geste humain : durée selon la distance, accélération puis décélération,
+        // une position toutes les ~8 ms. Envoyer chaque pixel coûtait ~1 ms par position (le curseur est redessiné) :
+        // 1 à 2 s pour 700 px, et plus quand le système est chargé.
+        double[] lengths  = cumulativeLengths(mousePositions);
+        long     duration = plannedDuration(distance, random);
+        long     start    = System.nanoTime();
+        long     elapsed;
+        while ((elapsed = (System.nanoTime() - start) / 1_000_000) < duration) {
+            Point point = positionAt(mousePositions, lengths, minimumJerk((double) elapsed / duration));
+            robot.mouseMove(point.x, point.y);
+            LockSupport.parkNanos(MOVE_INTERVAL_NS);
         }
-        
-        for (int i = 0, mousePositionsSize = mousePositions.size(); i < mousePositionsSize; i++) {
-            Point point = mousePositions.get(i);
-            
-            robot.mouseMove((int) point.getX(),
-                            (int) point.getY());
-            
-            if (mousePositions.size() - i < slowDownStartingPoint) {
-                
-                increment += incrementStep;
-                duration += increment;
-                if (duration > 1) {duration = 1;}
-                
-                delay(duration);
-            }
-        }
+        robot.mouseMove(xB, yB);
     }
-    
+
+    /**
+     * Intervalle entre deux positions envoyées.
+     */
+    static final long MOVE_INTERVAL_NS = 8_000_000;
+
+    /**
+     * Durée d'un geste selon sa longueur (forme de la loi de Fitts), à ± 15 % : ~220 ms pour 30 px, ~320 ms pour 100 px,
+     * ~540 ms pour 900 px.
+     */
+    static long plannedDuration(double distance, Random random) {
+
+        double base = 60 + 70 * (Math.log(distance / 8 + 1) / Math.log(2));
+        return Math.round(base * (0.85 + 0.3 * random.nextDouble()));
+    }
+
+    /**
+     * Profil de vitesse « à secousse minimale » d'un geste humain : départ et arrivée lents, vitesse maximale au milieu.
+     *
+     * @param fraction temps écoulé, de 0 à 1
+     * @return distance parcourue, de 0 à 1
+     */
+    static double minimumJerk(double fraction) {
+
+        double u = Math.clamp(fraction, 0, 1);
+        return u * u * u * (10 - 15 * u + 6 * u * u);
+    }
+
+    /**
+     * Longueur du chemin depuis son début, à chaque position.
+     */
+    static double[] cumulativeLengths(List<Point> path) {
+
+        double[] lengths = new double[path.size()];
+        for (int i = 1; i < path.size(); i++) {lengths[i] = lengths[i - 1] + path.get(i).distance(path.get(i - 1));}
+        return lengths;
+    }
+
+    /**
+     * Position du chemin à la fraction donnée de sa longueur.
+     */
+    static Point positionAt(List<Point> path, double[] lengths, double fraction) {
+
+        double target = fraction * lengths[lengths.length - 1];
+        int    index  = java.util.Arrays.binarySearch(lengths, target);
+        if (index < 0) {index = Math.min(-index - 1, path.size() - 1);}
+        return path.get(index);
+    }
+
     public void scrollDown(int scrollDown) {
         
         for (int ignore = 0; ignore < scrollDown; ignore++) {
