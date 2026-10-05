@@ -1,10 +1,18 @@
 package fr.ksuto.prh.research;
 
 import fr.ksuto.prh.capture.Capture;
+import fr.ksuto.prh.capture.RobotCaptureBackend;
+import fr.ksuto.prh.capture.GdiCaptureBackend;
+import fr.ksuto.prh.capture.DxgiCaptureBackend;
+import fr.ksuto.prh.capture.CaptureBackend;
 import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.capture.Rgb;
 import fr.ksuto.prh.research.paralelism.CaptureScheduler;
 
+import java.util.List;
+import javax.swing.JPanel;
+import javax.swing.JWindow;
+import javax.swing.SwingUtilities;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Locale;
@@ -28,12 +36,29 @@ public class ImageReadingSpeedTests {
 
         System.out.printf("Écran %dx%d, %d boucles par mesure%n%n", SCREEN.width, SCREEN.height, loops);
 
-        System.out.println("## Capture (Capture.zone)");
-        captureBench("plein écran", new Rectangle(SCREEN), loops);
-        captureBench("1/4 de surface", new Rectangle(SCREEN.width / 2, SCREEN.height / 2), loops);
-        captureBench("1/16 de surface", new Rectangle(SCREEN.width / 4, SCREEN.height / 4), loops);
-        captureBench("barre 300x30", new Rectangle(300, 30), loops);
-        captureBench("QR code 16x16", new Rectangle(16, 16), loops);
+        // Une seule duplication DXGI par écran et par processus : la même instance sert à toutes les mesures
+        RobotCaptureBackend robot = new RobotCaptureBackend();
+        GdiCaptureBackend   gdi   = new GdiCaptureBackend();
+        DxgiCaptureBackend  dxgi  = new DxgiCaptureBackend();
+
+        for (CaptureBackend backend : List.of(robot, gdi, dxgi)) {
+            Capture.setBackend(backend);
+            System.out.println("## Capture (Capture.zone) : " + backend.getClass().getSimpleName());
+            captureBench("plein écran", new Rectangle(SCREEN), loops);
+            captureBench("1/4 de surface", new Rectangle(SCREEN.width / 2, SCREEN.height / 2), loops);
+            captureBench("1/16 de surface", new Rectangle(SCREEN.width / 4, SCREEN.height / 4), loops);
+            captureBench("barre 300x30", new Rectangle(300, 30), loops);
+            captureBench("QR code 32x32", new Rectangle(0, 23, 32, 32), loops);
+            System.out.println();
+        }
+        Capture.setBackend(new RobotCaptureBackend());
+
+        System.out.println("## Écran animé (fenêtre redessinée en continu, comme un jeu) : chaque capture DXGI copie une nouvelle image");
+        animatedBench(loops, robot, dxgi);
+        System.out.println();
+
+        System.out.println("## Même image ? Robot, GDI et DXGI sur 400x300 (écran immobile)");
+        compareBackends(new Rectangle(0, 0, 400, 300), robot, gdi, dxgi);
 
         System.out.println();
         System.out.println("## Lecture de tous les pixels d'une capture plein écran");
@@ -57,6 +82,81 @@ public class ImageReadingSpeedTests {
         for (int i = 0; i < loops; i++) {checksum += Capture.zone(zone).rgb(0, 0);}
 
         print(label, System.nanoTime() - start, loops);
+    }
+
+    /**
+     * Une fenêtre qui change de couleur toutes les 5 ms force le bureau à produire de nouvelles images : c'est le cas d'un
+     * jeu, où DXGI recopie l'image à chaque capture au lieu de relire la précédente. On capture dans la fenêtre.
+     */
+    private static void animatedBench(int loops, CaptureBackend... backends) throws Exception {
+
+        int[]  tick  = {0};
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics graphics) {
+
+                graphics.setColor(new Color(tick[0] % 256, (tick[0] * 7) % 256, (tick[0] * 13) % 256));
+                graphics.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        JWindow window = new JWindow();
+        window.setContentPane(panel);
+        window.setBounds(100, 100, 200, 200);
+        window.setAlwaysOnTop(true);
+        javax.swing.Timer timer = new javax.swing.Timer(5, event -> {
+            tick[0]++;
+            panel.paintImmediately(0, 0, panel.getWidth(), panel.getHeight());
+        });
+        SwingUtilities.invokeAndWait(() -> window.setVisible(true));
+        timer.start();
+        Thread.sleep(500);
+
+        try {
+            for (CaptureBackend backend : backends) {
+                Capture.setBackend(backend);
+                String name = backend.getClass().getSimpleName();
+                captureBench(name + " 32x32", new Rectangle(150, 150, 32, 32), loops);
+                captureBench(name + " plein écran", new Rectangle(SCREEN), Math.max(20, loops / 4));
+
+                // Fraîcheur : combien de captures successives voient une couleur différente (nouvelle image)
+                int changes  = 0;
+                int previous = Capture.zone(new Rectangle(150, 150, 1, 1)).rgb(0, 0);
+                long start   = System.nanoTime();
+                while (System.nanoTime() - start < 1_000_000_000L) {
+                    int current = Capture.zone(new Rectangle(150, 150, 1, 1)).rgb(0, 0);
+                    if (current != previous) {changes++;}
+                    previous = current;
+                }
+                System.out.printf("  %-30s %d image(s) différente(s) vue(s) en 1 s (dessinées : %d)%n", name + " fraîcheur", changes, tick[0]);
+            }
+        }
+        finally {
+            timer.stop();
+            SwingUtilities.invokeAndWait(window::dispose);
+        }
+    }
+
+    private static void compareBackends(Rectangle zone, CaptureBackend robotBackend, CaptureBackend gdiBackend, CaptureBackend dxgiBackend) {
+
+        Frame robot = robotBackend.capture(zone);
+        Frame gdi   = gdiBackend.capture(zone);
+        Frame dxgi  = dxgiBackend.capture(zone);
+        int   sameDxgi = 0;
+        for (int y = 0; y < zone.height; y++) {
+            for (int x = 0; x < zone.width; x++) {
+                if (robot.rgb(x, y) == dxgi.rgb(x, y)) {sameDxgi++;}
+            }
+        }
+        System.out.printf("%-30s %d / %d pixels identiques à Robot (%.1f %%)%n", "DXGI", sameDxgi, zone.width * zone.height,
+                          100.0 * sameDxgi / (zone.width * zone.height));
+        int   same  = 0;
+        for (int y = 0; y < zone.height; y++) {
+            for (int x = 0; x < zone.width; x++) {
+                if (robot.rgb(x, y) == gdi.rgb(x, y)) {same++;}
+            }
+        }
+        System.out.printf("%-30s %d / %d pixels identiques (%.1f %%), taille GDI %dx%d%n", "comparaison", same, zone.width * zone.height,
+                          100.0 * same / (zone.width * zone.height), gdi.width(), gdi.height());
     }
 
     private static void readBench(String label, int loops, Runnable read) {
