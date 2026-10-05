@@ -3,9 +3,10 @@
 Mesures du 5 octobre 2026 sur le poste Windows (écran 1920x1080, échelle 100 %, JDK Temurin 25), avec le banc
 d'essai `src/test/java/fr/ksuto/prh/research/ImageReadingSpeedTests.java`.
 
-> **À refaire, session déverrouillée.** Pendant ces mesures, la session Windows était **verrouillée** : l'écran
-> affichait l'écran de verrouillage, une image fixe. Les temps ci-dessous mesurent donc le coût d'une capture d'un
-> écran qui ne change pas. Le cas d'un jeu, où l'image change en permanence, reste à mesurer (voir *Prochaines étapes*).
+Deux séries de mesures :
+- **écran fixe** : session Windows verrouillée, l'écran affichait l'écran de verrouillage ;
+- **écran animé** : session ouverte, un film en cours de lecture, plus une petite fenêtre du banc redessinée toutes les
+  5 ms. C'est le cas réaliste d'un jeu : à chaque capture DXGI, une nouvelle image est recopiée.
 
 ## Ce qui a été testé
 
@@ -22,7 +23,29 @@ somme de contrôle sur les pixels lus empêche la JVM d'éliminer les boucles.
 
 Vérification de l'image : la même zone de 400x300 est capturée par les trois moyens et comparée pixel par pixel.
 
-## Résultats (ms par capture, 200 captures)
+## Résultats, écran animé (session ouverte, film en lecture ; ms par capture, 200 captures)
+
+| Zone | Robot | GDI direct | DXGI |
+|---|---|---|---|
+| Plein écran 1920x1080 | 46,3 | 38,2 | **5,2** |
+| 1/4 de surface (960x540) | 19,7 | 14,3 | **0,98** |
+| 1/16 de surface (480x270) | 9,9 | 7,9 | **0,26** |
+| Barre 300x30 | 7,1 | 7,5 | **0,10** |
+| QR code 32x32 | 7,2 | 7,2 | **0,14** |
+
+Dans la fenêtre animée du banc (redessinée toutes les 5 ms) :
+
+| Mesure | Robot | DXGI |
+|---|---|---|
+| Capture 32x32 | 7,05 ms | **0,07 ms** |
+| Capture plein écran | 51,0 ms | **3,2 ms** |
+| Fraîcheur : images différentes vues en 1 s | 63 | 61 |
+
+La **fraîcheur** est la même : les deux voient environ 60 images différentes par seconde, soit la fréquence de l'écran
+(60 Hz). DXGI ne voit donc pas une image en retard par rapport à Robot ; aucun des deux ne peut voir plus d'images que
+l'écran n'en affiche.
+
+## Résultats, écran fixe (session verrouillée ; ms par capture, 200 captures)
 
 | Zone | Robot | GDI direct | DXGI |
 |---|---|---|---|
@@ -35,19 +58,25 @@ Vérification de l'image : la même zone de 400x300 est capturée par les trois 
 Un premier passage (100 captures) donnait le même ordre de grandeur : QR code 6,9 / 7,9 / 0,17 ms, plein écran
 57 / 37 / 4,0 ms.
 
-**Image identique** : 120 000 pixels sur 120 000 identiques entre Robot et GDI, et entre Robot et DXGI.
+**Image identique** (dans les deux séries) : 120 000 pixels sur 120 000 identiques entre Robot et GDI, et entre Robot
+et DXGI.
 
-Lecture de tous les pixels d'une capture plein écran : `BufferedImage.getRGB` 8,5 ms, `Frame.rgb` 3,6 ms.
+Lecture de tous les pixels d'une capture plein écran : `BufferedImage.getRGB` 8,5 à 8,8 ms, `Frame.rgb` 3,6 à 4,8 ms.
 
-`CaptureScheduler` (4 threads, 10 captures/s chacun, plein écran, Robot) : 33,6 images/s.
+`CaptureScheduler` (4 threads, 10 captures/s chacun, plein écran, Robot) : 33,6 à 37,7 images/s.
 
 ## Ce qu'on en retient
 
 - **GDI direct n'apporte rien** sur les petites zones : Robot utilise déjà GDI sous Windows. Les deux butent sur un
   plancher d'environ 7 à 9 ms par capture, quelle que soit la taille : c'est le coût de la lecture de l'écran à travers
   le compositeur de Windows (DWM). Seul le plein écran gagne un peu (36 contre 51 ms).
-- **DXGI change d'échelle** : 0,05 ms pour le QR code, environ **160 fois** plus rapide que Robot, et 2,9 ms pour un
-  plein écran (17 fois). La copie se fait dans la carte graphique ; seule la zone demandée est lue en mémoire.
+- **DXGI change d'échelle, même sur un écran qui change** : 0,07 à 0,14 ms pour le QR code, **50 à 100 fois** plus
+  rapide que Robot, et 3 à 5 ms pour un plein écran (environ 10 fois). Sur un écran fixe, où l'image précédente est
+  simplement relue, on descend à 0,05 ms. La copie se fait dans la carte graphique ; seule la zone demandée est lue en
+  mémoire.
+- **Même fraîcheur que Robot** : environ 60 images différentes par seconde, la fréquence de l'écran.
+- Pour ClockWork, une capture de la grille passe de ~7 ms à ~0,1 ms : la capture ne compte plus dans la boucle de
+  décision (100 ms), et un bot qui surveille plusieurs zones ou tout l'écran devient possible à 60 images/s.
 - Le plancher d'environ 18 ms noté lors d'une mesure précédente (2 octobre) ne se retrouve pas ici (7 à 9 ms) : les
   conditions de cette mesure-là (session, charge) ne sont pas connues.
 
@@ -66,13 +95,10 @@ Lecture de tous les pixels d'une capture plein écran : `BufferedImage.getRGB` 8
 
 ## Prochaines étapes
 
-1. **Mesurer avec un écran qui change**, session déverrouillée : le banc ouvre une petite fenêtre redessinée toutes
-   les 5 ms et mesure la capture dans cette fenêtre, plus le nombre d'images différentes vues en une seconde
-   (fraîcheur). C'est le cas de WoW : chaque capture DXGI recopie alors une nouvelle image (copie GPU du bureau
-   entier, puis lecture), plus coûteuse qu'une relecture. Sur la session verrouillée, cette mesure n'a rien montré
-   (aucune image différente, la fenêtre étant cachée par l'écran de verrouillage).
-2. Si le résultat se confirme, **faire de DXGI le moyen par défaut** sous Windows, avec repli sur Robot si Direct3D est
-   indisponible, puis l'utiliser dans ClockWork.
+1. **Faire de DXGI le moyen par défaut** sous Windows, avec repli sur Robot si Direct3D est indisponible, puis
+   l'utiliser dans ClockWork.
+2. Provoquer une perte de duplication (verrouillage, changement de résolution) pendant une capture pour vérifier la
+   recréation automatique.
 
 ## Relancer les mesures
 
