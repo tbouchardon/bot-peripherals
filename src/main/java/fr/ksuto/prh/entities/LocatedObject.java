@@ -4,7 +4,6 @@ import fr.ksuto.prh.peripherals.Mouse;
 import lombok.Data;
 
 import java.awt.*;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +36,7 @@ public abstract class LocatedObject {
             mouse.naturalMoveTo(positions.get(nth - 1).getX() + xOffest, positions.get(nth - 1).getY() + yOffest);
             mouse.clickLeft();
         }
-        catch (AWTException | NoSuchAlgorithmException e) {
+        catch (AWTException e) {
             e.printStackTrace();
         }
     }

@@ -28,7 +28,8 @@ public class ColorChecker {
         
         int iCapturedRGB = capturedScreen.rgb(x, y);
         // Debug.sysOut("Peripheral > (" + x + ", " + y + ") Searching : " + color + ", found : " + iCapturedRGB + ".");
-        return (color == iCapturedRGB);
+        // Couleurs comparées sans le canal alpha : la capture le renvoie opaque, la couleur demandée ne l'a souvent pas
+        return (color & 0xFFFFFF) == (iCapturedRGB & 0xFFFFFF);
     }
     
     public ColorChecker setCapturedScreen(Frame biCapturedScreen) {

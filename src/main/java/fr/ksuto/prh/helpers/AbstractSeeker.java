@@ -16,7 +16,6 @@ import fr.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
@@ -76,6 +75,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
     private ShowObjects<T> showObjects;
     private Robot robot;
+    private Mouse mouse;
     private SearchMemory memory;
     private Function<Rectangle, Frame> capture = Capture::zone;
     private boolean showTargets = false;
@@ -777,12 +777,13 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
         try {
             if (robot == null) {robot = new Robot();}
+            if (mouse == null) {mouse = new Mouse();}
             Peripheral.delay(clickDelay);
-            (new Mouse()).move(position.getX() + offsetX, position.getY() + offsetY);
+            mouse.move(position.getX() + offsetX, position.getY() + offsetY);
             robot.mousePress(Mouse.LEFT);
             Peripheral.delay(delay);
             robot.mouseRelease(Mouse.LEFT);
-        } catch (AWTException | NoSuchAlgorithmException e) {
+        } catch (AWTException e) {
             logger.error("Clic impossible : {}", e.getMessage());
         }
         return this;

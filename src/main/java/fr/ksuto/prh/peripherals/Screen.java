@@ -6,7 +6,7 @@ import fr.ksuto.commons.helpers.InOut;
 import fr.ksuto.prh.capture.Capture;
 import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.helpers.ColorChecker;
-import fr.ksuto.prh.research.paralelism.CaptureScheduler;
+import fr.ksuto.prh.capture.CaptureScheduler;
 import lombok.Data;
 
 import java.awt.*;
@@ -69,8 +69,10 @@ public class Screen extends Peripheral {
     
     public void waitUntilHasChanged(List<Zone> zones, Integer msDelay, ZoneEnum zoneEnum, Integer maxWaitingMilliseconds, boolean debug) {
         
-        Frame image1 = Capture.screen();
-        Frame image2;
+        // Seul le rectangle qui englobe les zones surveillées est capturé, pas tout l'écran
+        Rectangle watched = zones.stream().map(Zone::getRectangle).reduce(Rectangle::union).orElse(new Rectangle());
+        Frame     image1  = Capture.zone(watched);
+        Frame     image2;
         
         if (debug) {InOut.writeImage(image1.image(), System.currentTimeMillis() + "_base");}
         
@@ -80,7 +82,7 @@ public class Screen extends Peripheral {
         
         do {
             delay(msDelay == null ? 250 : msDelay);
-            image2 = Capture.screen();
+            image2 = Capture.zone(watched);
             
             if (debug) {InOut.writeImage(image2.image(), System.currentTimeMillis() + "_comparingTo");}
             
@@ -114,11 +116,14 @@ public class Screen extends Peripheral {
         while (isMoving()) {delay(200);}
     }
     
+    /**
+     * @param zone zone de l'écran ; les deux captures peuvent ne couvrir qu'une partie de l'écran (leur origine compte)
+     */
     public boolean zoneHasChanged(Frame image1, Frame image2, Zone zone) {
         
         for (int x = zone.xMin; x < zone.xMax; x++) {
             for (int y = zone.yMin; y < zone.yMax; y++) {
-                if (image1.rgb(x, y) != image2.rgb(x, y)) {
+                if (image1.rgb(x - image1.x(), y - image1.y()) != image2.rgb(x - image2.x(), y - image2.y())) {
                     logger.trace("Change : x = " + x + ", y = " + y);
                     return true;
                 }
@@ -153,8 +158,9 @@ public class Screen extends Peripheral {
         int pixelColor2 = screenCapture.rgb(screenCapture.width() / 2, screenCapture.height() / 2);
         int pixelColor3 = screenCapture.rgb(screenCapture.width() / 2 + 100, screenCapture.height() / 2 + 100);
         
-        return pixelColor1 != initialPixelColor1 &&
-               pixelColor2 != initialPixelColor2;
+        // L'image bouge si au moins deux des trois points témoins ont changé
+        int changed = (pixelColor1 != initialPixelColor1 ? 1 : 0) + (pixelColor2 != initialPixelColor2 ? 1 : 0) + (pixelColor3 != initialPixelColor3 ? 1 : 0);
+        return changed >= 2;
     }
     
     public enum ZoneEnum {

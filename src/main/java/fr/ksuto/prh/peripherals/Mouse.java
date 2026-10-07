@@ -10,8 +10,6 @@ import fr.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,12 +43,13 @@ public class Mouse extends Peripheral {
     private int           dragDelay;
     private int           dragSpace;
     
-    public Mouse() throws AWTException, NoSuchAlgorithmException {
+    public Mouse() throws AWTException {
         
         super();
         dragSpace = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.mouse.drag.space", "5"));
         dragDelay = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.mouse.drag.delay", "10"));
-        random = SecureRandom.getInstanceStrong();
+        // Un aléa ordinaire suffit à varier les gestes ; SecureRandom.getInstanceStrong() pouvait bloquer (entropie)
+        random = new Random();
     }
     
     public void clickAlongLine(int numberOf, int x1, int y1, int x2, int y2, int iButtonMask) {
@@ -250,8 +249,6 @@ public class Mouse extends Peripheral {
         double xA = MouseInfo.getPointerInfo().getLocation().getX();
         double yA = MouseInfo.getPointerInfo().getLocation().getY();
         
-        boolean isLeftToRight      = xB > xA;
-        boolean isTopToBottom      = yB > yA;
         double  distance           = Arithmetic.getDistance(xA, yA, xB, yB);
         int     numberOfOverRun    = (int) Math.floor(random.nextInt(2) + 0.5);
         int     numberOfDeviations = getNumberOfDeviations(distance, 0);
@@ -260,7 +257,7 @@ public class Mouse extends Peripheral {
         pointList.add(new Point((int) xA,
                                 (int) yA));
         
-        generateDeviationsPoints(xB, yB, xA, yA, isLeftToRight, numberOfDeviations, pointList);
+        pointList.addAll(deviationPoints(new Point((int) xA, (int) yA), new Point(xB, yB), numberOfDeviations, random));
         
         int maximumOverRun = (int) Math.min(150, distance * 0.2 + 1);
         
@@ -383,22 +380,23 @@ public class Mouse extends Peripheral {
         zoom(steps, true);
     }
     
-    private void generateDeviationsPoints(int xB, int yB, double xA, double yA, boolean isLeftToRight, int numberOfDeviations, List<Point> pointList) {
+    /**
+     * Points intermédiaires d'un long geste, sur le segment de {@code a} à {@code b} : chacun parcourt de 25 à 81 % de ce
+     * qui reste. Calculés en fraction du segment, pas avec sa pente : un geste vertical (pente infinie) donnait des
+     * positions NaN, ramenées en haut de l'écran.
+     */
+    static List<Point> deviationPoints(Point a, Point b, int numberOfDeviations, Random random) {
         
-        double xnA = xA;
-        double m   = (yB - yA) / (xB - xA); // y = mx + p
-        //        double mp  = -1 / m; // Perpendiculaire
+        List<Point> points = new ArrayList<>();
+        double      x      = a.getX(), y = a.getY();
         
         for (int index = 0; index < numberOfDeviations; index++) {
-            
-            double dxnAxB = Math.abs(xnA - xB);
-            
-            double xC = ((isLeftToRight ? 1 : -1) * (((dxnAxB - (dxnAxB * 0.25)) * Math.random() * 0.75) + (dxnAxB * 0.25))) + xnA;
-            double yC = (m * (xC - xA)) + yA;
-            Point  c  = new Point((int) xC, (int) yC);
-            pointList.add(c);
-            xnA = xC;
+            double fraction = 0.25 + 0.5625 * random.nextDouble();
+            x += (b.getX() - x) * fraction;
+            y += (b.getY() - y) * fraction;
+            points.add(new Point((int) Math.round(x), (int) Math.round(y)));
         }
+        return points;
     }
     
     @NotNull

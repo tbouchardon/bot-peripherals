@@ -161,19 +161,27 @@ public class Keyboard extends Peripheral {
     
     public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift, int duration) {
         
-        if (alt) {robot.keyPress(KeyEvent.VK_ALT);}
-        if (ctrl) {robot.keyPress(KeyEvent.VK_CONTROL);}
-        if (shift) {robot.keyPress(KeyEvent.VK_SHIFT);}
-        
-        delay(i_DELAY);
-        robot.keyPress(keyEvent);
-        delay(duration);
-        robot.keyRelease(keyEvent);
-        delay(i_DELAY);
-        
-        if (shift) {robot.keyRelease(KeyEvent.VK_SHIFT);}
-        if (ctrl) {robot.keyRelease(KeyEvent.VK_CONTROL);}
-        if (alt) {robot.keyRelease(KeyEvent.VK_ALT);}
+        // Relâchement garanti, même en cas d'erreur : un modificateur resté enfoncé fausserait toutes les frappes suivantes
+        try {
+            if (alt) {robot.keyPress(KeyEvent.VK_ALT);}
+            if (ctrl) {robot.keyPress(KeyEvent.VK_CONTROL);}
+            if (shift) {robot.keyPress(KeyEvent.VK_SHIFT);}
+            
+            delay(i_DELAY);
+            robot.keyPress(keyEvent);
+            try {
+                delay(duration);
+            }
+            finally {
+                robot.keyRelease(keyEvent);
+            }
+            delay(i_DELAY);
+        }
+        finally {
+            if (shift) {robot.keyRelease(KeyEvent.VK_SHIFT);}
+            if (ctrl) {robot.keyRelease(KeyEvent.VK_CONTROL);}
+            if (alt) {robot.keyRelease(KeyEvent.VK_ALT);}
+        }
     }
     
     public void selectAll() {

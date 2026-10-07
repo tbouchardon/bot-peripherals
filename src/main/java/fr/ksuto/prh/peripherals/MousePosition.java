@@ -46,24 +46,25 @@ public class MousePosition {
     //        this.yPos = yPos;
     //    }
     
+    /**
+     * Même position de souris (cohérent avec {@link #hashCode()}).
+     */
     @Override
     public boolean equals(Object other) {
         
-        if (other == null) {return false;}
         if (other == this) {return true;}
-        if (!(other instanceof MousePosition)) {return false;}
-        
-        //noinspection UnnecessaryLocalVariable
-        boolean hasMoved = (xPos != ((MousePosition) other).xPos) || (yPos != ((MousePosition) other).yPos);
-        
-        return hasMoved;
+        if (!(other instanceof MousePosition position)) {return false;}
+        return xPos == position.xPos && yPos == position.yPos;
     }
     
+    /**
+     * @return la souris a bougé depuis la dernière position retenue ({@link #updateMousePosition()})
+     */
     public boolean hasMoved() {
         
         Point point = MouseInfo.getPointerInfo().getLocation();
         
-        return point.x == this.xPos && point.y == this.yPos;
+        return point.x != this.xPos || point.y != this.yPos;
     }
     
     public void updateMousePosition() {

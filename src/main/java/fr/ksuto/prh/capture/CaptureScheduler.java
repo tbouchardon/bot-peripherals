@@ -1,4 +1,4 @@
-package fr.ksuto.prh.research.paralelism;
+package fr.ksuto.prh.capture;
 
 import fr.ksuto.prh.capture.Capture;
 import fr.ksuto.prh.capture.Frame;

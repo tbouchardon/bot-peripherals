@@ -7,7 +7,7 @@ import fr.ksuto.prh.capture.DxgiCaptureBackend;
 import fr.ksuto.prh.capture.CaptureBackend;
 import fr.ksuto.prh.capture.Frame;
 import fr.ksuto.prh.capture.Rgb;
-import fr.ksuto.prh.research.paralelism.CaptureScheduler;
+import fr.ksuto.prh.capture.CaptureScheduler;
 
 import java.util.List;
 import javax.swing.JPanel;

@@ -48,4 +48,34 @@ class MouseMotionTest {
         assertEquals(new Point(100, 50), Mouse.positionAt(path, lengths, 0.75));
         assertEquals(new Point(100, 100), Mouse.positionAt(path, lengths, 1));
     }
+
+    @Test
+    void deviationsOfAVerticalGestureStayOnItsPath() {
+
+        // Régression : la pente d'un geste vertical est infinie, les points intermédiaires valaient NaN, ramenés en y = 0
+        Random random = new Random(3);
+        for (int i = 0; i < 100; i++) {
+            List<Point> points = Mouse.deviationPoints(new Point(400, 900), new Point(400, 100), 3, random);
+            assertEquals(3, points.size());
+            int previous = 900;
+            for (Point point : points) {
+                assertEquals(400, point.x, "sur la verticale");
+                assertTrue(point.y < previous && point.y > 100, "vers la destination, sans la dépasser : " + point);
+                previous = point.y;
+            }
+        }
+    }
+
+    @Test
+    void deviationsOfAnyGestureStayBetweenItsEnds() {
+
+        Random random = new Random(5);
+        for (int i = 0; i < 100; i++) {
+            Point a = new Point(random.nextInt(1920), random.nextInt(1080)), b = new Point(random.nextInt(1920), random.nextInt(1080));
+            for (Point point : Mouse.deviationPoints(a, b, 2, random)) {
+                assertTrue(point.x >= Math.min(a.x, b.x) && point.x <= Math.max(a.x, b.x), a + " → " + b + " : " + point);
+                assertTrue(point.y >= Math.min(a.y, b.y) && point.y <= Math.max(a.y, b.y), a + " → " + b + " : " + point);
+            }
+        }
+    }
 }
