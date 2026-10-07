@@ -5,592 +5,214 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.Optional;
+import java.util.Random;
 
 import com.google.inject.Inject;
 
 /**
- * Created by thomas.bouchardon on 26/11/2015!
+ * Clavier, avec des gestes humains ({@link HumanTiming}) : modificateur enfoncé un peu avant la touche, touche tenue
+ * quelques dizaines de millisecondes, durées différentes à chaque fois.
+ * <p>
+ * {@link #typeString} tape caractère par caractère. Sous Windows, chaque caractère est cherché sur la disposition active
+ * du clavier (AZERTY, QWERTY...) et envoyé comme une vraie touche ({@link WindowsKeys}) ; un caractère qu'aucune touche
+ * ne produit passe par la saisie Unicode. Ailleurs, la touche Java du caractère, Maj pour les majuscules.
  */
 @SuppressWarnings("unused")
 public class Keyboard extends Peripheral {
-    
+
+    /**
+     * Le clavier natif de Windows est disponible.
+     */
+    static final boolean WINDOWS = System.getProperty("os.name", "").startsWith("Windows");
+
+    private static final Logger logger = LoggerFactory.getLogger(Keyboard.class);
+
     @Inject
     private MousePosition mousePosition;
-    private static final Logger logger = LoggerFactory.getLogger(Keyboard.class);
-    private int           typingDelay;
-    
+    private final Random  random = new Random();
+    private final int     typingDelay;
+
     Keyboard() throws AWTException {
-        
+
         super();
         typingDelay = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.keyboard.typing.delay", "50"));
     }
-    
+
+    private void waitIfUserActive() {
+
+        if (mousePosition != null) {mousePosition.waitIfUserActive();}
+    }
+
     public void altTab() {
-        
-        mousePosition.waitIfUserActive();
-        
-        robot.keyPress(KeyEvent.VK_ALT);
-        robot.keyPress(KeyEvent.VK_TAB);
-        robot.keyRelease(KeyEvent.VK_TAB);
-        robot.keyRelease(KeyEvent.VK_ALT);
+
+        waitIfUserActive();
+        pressKey(KeyEvent.VK_TAB, true, false, false);
     }
-    
+
     public void enter() {
-        
-        mousePosition.waitIfUserActive();
-        
-        robot.keyPress(KeyEvent.VK_ENTER);
-        robot.keyRelease(KeyEvent.VK_ENTER);
-        delay(i_DELAY);
+
+        waitIfUserActive();
+        pressKey(KeyEvent.VK_ENTER);
     }
-    
+
     public void escape() {
-        
-        mousePosition.waitIfUserActive();
-        
-        robot.keyPress(KeyEvent.VK_ESCAPE);
-        robot.keyRelease(KeyEvent.VK_ESCAPE);
-        delay(i_DELAY);
+
+        waitIfUserActive();
+        pressKey(KeyEvent.VK_ESCAPE);
     }
-    
-    public void f1() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F1);
-        robot.keyRelease(KeyEvent.VK_F1);
-        delay(i_DELAY);
+
+    /**
+     * Touche de fonction F1 à F12.
+     */
+    public void functionKey(int number) {
+
+        if (number < 1 || number > 12) {throw new IllegalArgumentException("Touche de fonction F1 à F12 : F" + number);}
+        waitIfUserActive();
+        pressKey(KeyEvent.VK_F1 + number - 1);
     }
-    
-    public void f10() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F10);
-        robot.keyRelease(KeyEvent.VK_F10);
-        delay(i_DELAY);
-    }
-    
-    public void f11() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F11);
-        robot.keyRelease(KeyEvent.VK_F11);
-        delay(i_DELAY);
-    }
-    
-    public void f12() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F12);
-        robot.keyRelease(KeyEvent.VK_F12);
-        delay(i_DELAY);
-    }
-    
-    public void f2() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F2);
-        robot.keyRelease(KeyEvent.VK_F2);
-        delay(i_DELAY);
-    }
-    
-    public void f3() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F3);
-        robot.keyRelease(KeyEvent.VK_F3);
-        delay(i_DELAY);
-    }
-    
-    public void f4() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F4);
-        robot.keyRelease(KeyEvent.VK_F4);
-        delay(i_DELAY);
-    }
-    
-    public void f5() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F5);
-        robot.keyRelease(KeyEvent.VK_F5);
-        delay(i_DELAY);
-    }
-    
-    public void f6() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F6);
-        robot.keyRelease(KeyEvent.VK_F6);
-        delay(i_DELAY);
-    }
-    
-    public void f7() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F7);
-        robot.keyRelease(KeyEvent.VK_F7);
-        delay(i_DELAY);
-    }
-    
-    public void f8() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F8);
-        robot.keyRelease(KeyEvent.VK_F8);
-        delay(i_DELAY);
-    }
-    
-    public void f9() {
-        
-        mousePosition.waitIfUserActive();
-        robot.keyPress(KeyEvent.VK_F9);
-        robot.keyRelease(KeyEvent.VK_F9);
-        delay(i_DELAY);
-    }
-    
+
+    public void f1() {functionKey(1);}
+
+    public void f2() {functionKey(2);}
+
+    public void f3() {functionKey(3);}
+
+    public void f4() {functionKey(4);}
+
+    public void f5() {functionKey(5);}
+
+    public void f6() {functionKey(6);}
+
+    public void f7() {functionKey(7);}
+
+    public void f8() {functionKey(8);}
+
+    public void f9() {functionKey(9);}
+
+    public void f10() {functionKey(10);}
+
+    public void f11() {functionKey(11);}
+
+    public void f12() {functionKey(12);}
+
     public void pressKey(int keyEvent) {
-        
+
         pressKey(keyEvent, false, false, false);
     }
-    
+
     public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift) {
-        
+
         pressKey(keyEvent, alt, ctrl, shift, 0);
     }
-    
+
+    /**
+     * Appuie sur une touche (code Java {@link KeyEvent}), avec ses modificateurs, comme une main : modificateurs d'abord,
+     * touche tenue, modificateurs relâchés juste après.
+     *
+     * @param duration durée d'appui en ms ; 0 = durée humaine tirée au hasard ({@link HumanTiming#hold})
+     */
     public void pressKey(int keyEvent, boolean alt, boolean ctrl, boolean shift, int duration) {
-        
+
+        boolean modified = alt || ctrl || shift;
         // Relâchement garanti, même en cas d'erreur : un modificateur resté enfoncé fausserait toutes les frappes suivantes
         try {
             if (alt) {robot.keyPress(KeyEvent.VK_ALT);}
             if (ctrl) {robot.keyPress(KeyEvent.VK_CONTROL);}
             if (shift) {robot.keyPress(KeyEvent.VK_SHIFT);}
-            
-            delay(i_DELAY);
+            if (modified) {delay(HumanTiming.modifierLead(random));}
+
             robot.keyPress(keyEvent);
             try {
-                delay(duration);
+                delay(duration > 0 ? duration : HumanTiming.hold(random));
             }
             finally {
                 robot.keyRelease(keyEvent);
             }
-            delay(i_DELAY);
+            if (modified) {delay(HumanTiming.modifierLag(random));}
         }
         finally {
             if (shift) {robot.keyRelease(KeyEvent.VK_SHIFT);}
             if (ctrl) {robot.keyRelease(KeyEvent.VK_CONTROL);}
             if (alt) {robot.keyRelease(KeyEvent.VK_ALT);}
         }
+        delay(HumanTiming.modifierLag(random));
     }
-    
+
     public void selectAll() {
-        
-        mousePosition.waitIfUserActive();
-        
-        robot.keyPress(KeyEvent.VK_CONTROL);
-        robot.keyPress(KeyEvent.VK_A);
-        robot.keyRelease(KeyEvent.VK_A);
-        robot.keyRelease(KeyEvent.VK_CONTROL);
-        delay(i_DELAY);
+
+        waitIfUserActive();
+        pressKey(KeyEvent.VK_A, false, true, false);
     }
-    
-    public void typeString(String strText) {
-        
-        mousePosition.waitIfUserActive();
-        
-        logger.info("typeString(" + strText + ")");
-        
-        for (char cLetter : strText.toCharArray()) {
-            
-            switch (cLetter) {
-                case 'a':
-                    robot.keyPress(KeyEvent.VK_A);
-                    robot.keyRelease(KeyEvent.VK_A);
-                    break;
-                case 'b':
-                    robot.keyPress(KeyEvent.VK_B);
-                    robot.keyRelease(KeyEvent.VK_B);
-                    break;
-                case 'c':
-                    robot.keyPress(KeyEvent.VK_C);
-                    robot.keyRelease(KeyEvent.VK_C);
-                    break;
-                case 'd':
-                    robot.keyPress(KeyEvent.VK_D);
-                    robot.keyRelease(KeyEvent.VK_D);
-                    break;
-                case 'e':
-                    robot.keyPress(KeyEvent.VK_E);
-                    robot.keyRelease(KeyEvent.VK_E);
-                    break;
-                case 'f':
-                    robot.keyPress(KeyEvent.VK_F);
-                    robot.keyRelease(KeyEvent.VK_F);
-                    break;
-                case 'g':
-                    robot.keyPress(KeyEvent.VK_G);
-                    robot.keyRelease(KeyEvent.VK_G);
-                    break;
-                case 'h':
-                    robot.keyPress(KeyEvent.VK_H);
-                    robot.keyRelease(KeyEvent.VK_H);
-                    break;
-                case 'i':
-                    robot.keyPress(KeyEvent.VK_I);
-                    robot.keyRelease(KeyEvent.VK_I);
-                    break;
-                case 'j':
-                    robot.keyPress(KeyEvent.VK_J);
-                    robot.keyRelease(KeyEvent.VK_J);
-                    break;
-                case 'k':
-                    robot.keyPress(KeyEvent.VK_K);
-                    robot.keyRelease(KeyEvent.VK_K);
-                    break;
-                case 'l':
-                    robot.keyPress(KeyEvent.VK_L);
-                    robot.keyRelease(KeyEvent.VK_L);
-                    break;
-                case 'm':
-                    robot.keyPress(KeyEvent.VK_M);
-                    robot.keyRelease(KeyEvent.VK_M);
-                    break;
-                case 'n':
-                    robot.keyPress(KeyEvent.VK_N);
-                    robot.keyRelease(KeyEvent.VK_N);
-                    break;
-                case 'o':
-                    robot.keyPress(KeyEvent.VK_O);
-                    robot.keyRelease(KeyEvent.VK_O);
-                    break;
-                case 'p':
-                    robot.keyPress(KeyEvent.VK_P);
-                    robot.keyRelease(KeyEvent.VK_P);
-                    break;
-                case 'q':
-                    robot.keyPress(KeyEvent.VK_Q);
-                    robot.keyRelease(KeyEvent.VK_Q);
-                    break;
-                case 'r':
-                    robot.keyPress(KeyEvent.VK_R);
-                    robot.keyRelease(KeyEvent.VK_R);
-                    break;
-                case 's':
-                    robot.keyPress(KeyEvent.VK_S);
-                    robot.keyRelease(KeyEvent.VK_S);
-                    break;
-                case 't':
-                    robot.keyPress(KeyEvent.VK_T);
-                    robot.keyRelease(KeyEvent.VK_T);
-                    break;
-                case 'u':
-                    robot.keyPress(KeyEvent.VK_U);
-                    robot.keyRelease(KeyEvent.VK_U);
-                    break;
-                case 'v':
-                    robot.keyPress(KeyEvent.VK_V);
-                    robot.keyRelease(KeyEvent.VK_V);
-                    break;
-                case 'w':
-                    robot.keyPress(KeyEvent.VK_W);
-                    robot.keyRelease(KeyEvent.VK_W);
-                    break;
-                case 'x':
-                    robot.keyPress(KeyEvent.VK_X);
-                    robot.keyRelease(KeyEvent.VK_X);
-                    break;
-                case 'y':
-                    robot.keyPress(KeyEvent.VK_Y);
-                    robot.keyRelease(KeyEvent.VK_Y);
-                    break;
-                case 'z':
-                    robot.keyPress(KeyEvent.VK_Z);
-                    robot.keyRelease(KeyEvent.VK_Z);
-                    break;
-                case 'A':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_A);
-                    robot.keyRelease(KeyEvent.VK_A);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'B':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_B);
-                    robot.keyRelease(KeyEvent.VK_B);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'C':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_C);
-                    robot.keyRelease(KeyEvent.VK_C);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'D':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_D);
-                    robot.keyRelease(KeyEvent.VK_D);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'E':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_E);
-                    robot.keyRelease(KeyEvent.VK_E);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'F':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_F);
-                    robot.keyRelease(KeyEvent.VK_F);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'G':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_G);
-                    robot.keyRelease(KeyEvent.VK_G);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'H':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_H);
-                    robot.keyRelease(KeyEvent.VK_H);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'I':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_I);
-                    robot.keyRelease(KeyEvent.VK_I);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'J':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_J);
-                    robot.keyRelease(KeyEvent.VK_J);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'K':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_K);
-                    robot.keyRelease(KeyEvent.VK_K);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'L':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_L);
-                    robot.keyRelease(KeyEvent.VK_L);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'M':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_M);
-                    robot.keyRelease(KeyEvent.VK_M);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'N':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_N);
-                    robot.keyRelease(KeyEvent.VK_N);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'O':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_O);
-                    robot.keyRelease(KeyEvent.VK_O);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'P':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_P);
-                    robot.keyRelease(KeyEvent.VK_P);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'Q':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_Q);
-                    robot.keyRelease(KeyEvent.VK_Q);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'R':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_R);
-                    robot.keyRelease(KeyEvent.VK_R);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'S':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_S);
-                    robot.keyRelease(KeyEvent.VK_S);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'T':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_T);
-                    robot.keyRelease(KeyEvent.VK_T);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'U':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_U);
-                    robot.keyRelease(KeyEvent.VK_U);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'V':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_V);
-                    robot.keyRelease(KeyEvent.VK_V);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'W':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_W);
-                    robot.keyRelease(KeyEvent.VK_W);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'X':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_X);
-                    robot.keyRelease(KeyEvent.VK_X);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'Y':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_Y);
-                    robot.keyRelease(KeyEvent.VK_Y);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case 'Z':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_Z);
-                    robot.keyRelease(KeyEvent.VK_Z);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '0':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_0);
-                    robot.keyRelease(KeyEvent.VK_0);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '1':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_1);
-                    robot.keyRelease(KeyEvent.VK_1);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '2':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_2);
-                    robot.keyRelease(KeyEvent.VK_2);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '3':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_3);
-                    robot.keyRelease(KeyEvent.VK_3);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '4':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_4);
-                    robot.keyRelease(KeyEvent.VK_4);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '5':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_5);
-                    robot.keyRelease(KeyEvent.VK_5);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '6':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_6);
-                    robot.keyRelease(KeyEvent.VK_6);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '7':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_7);
-                    robot.keyRelease(KeyEvent.VK_7);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '8':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_8);
-                    robot.keyRelease(KeyEvent.VK_8);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '9':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_9);
-                    robot.keyRelease(KeyEvent.VK_9);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '&':
-                    robot.keyPress(KeyEvent.VK_1);
-                    robot.keyRelease(KeyEvent.VK_1);
-                    break;
-                case '"':
-                    robot.keyPress(KeyEvent.VK_3);
-                    robot.keyRelease(KeyEvent.VK_3);
-                    break;
-                case '\'':
-                    robot.keyPress(KeyEvent.VK_4);
-                    robot.keyRelease(KeyEvent.VK_4);
-                    break;
-                case '-':
-                    robot.keyPress(KeyEvent.VK_6);
-                    robot.keyRelease(KeyEvent.VK_6);
-                    break;
-                case ';':
-                    robot.keyPress(KeyEvent.VK_SEMICOLON);
-                    robot.keyRelease(KeyEvent.VK_SEMICOLON);
-                    break;
-                case ':':
-                    robot.keyPress(KeyEvent.VK_COLON);
-                    robot.keyRelease(KeyEvent.VK_COLON);
-                    break;
-                case '.':
-                    robot.keyPress(KeyEvent.VK_SHIFT);
-                    robot.keyPress(KeyEvent.VK_SEMICOLON);
-                    robot.keyRelease(KeyEvent.VK_SEMICOLON);
-                    robot.keyRelease(KeyEvent.VK_SHIFT);
-                    break;
-                case '/':
-                    robot.keyPress(KeyEvent.VK_ALT);
-                    robot.keyPress(KeyEvent.VK_NUMPAD0);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
-                    robot.keyPress(KeyEvent.VK_NUMPAD0);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
-                    robot.keyPress(KeyEvent.VK_NUMPAD4);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD4);
-                    robot.keyPress(KeyEvent.VK_NUMPAD7);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD7);
-                    robot.keyRelease(KeyEvent.VK_ALT);
-                    break;
-                case ' ':
-                    robot.keyPress(KeyEvent.VK_SPACE);
-                    robot.keyRelease(KeyEvent.VK_SPACE);
-                    break;
-                case '!':
-                    robot.keyPress(KeyEvent.VK_EXCLAMATION_MARK);
-                    robot.keyRelease(KeyEvent.VK_EXCLAMATION_MARK);
-                    break;
-                case '@':
-                    robot.keyPress(KeyEvent.VK_ALT);
-                    robot.keyPress(KeyEvent.VK_NUMPAD0);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
-                    robot.keyPress(KeyEvent.VK_NUMPAD0);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD0);
-                    robot.keyPress(KeyEvent.VK_NUMPAD6);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD6);
-                    robot.keyPress(KeyEvent.VK_NUMPAD4);
-                    robot.keyRelease(KeyEvent.VK_NUMPAD4);
-                    robot.keyRelease(KeyEvent.VK_ALT);
-                    break;
-            }
-            delay(typingDelay);
+
+    /**
+     * Tape un texte caractère par caractère, avec des intervalles humains ({@code ksuto.prh.peripherals.keyboard.typing.delay}
+     * à ±50 %).
+     */
+    public void typeString(String text) {
+
+        waitIfUserActive();
+        logger.info("typeString({})", text);
+
+        for (char character : text.toCharArray()) {
+            if (WINDOWS) {typeOnWindows(character);}
+            else {typeWithRobot(character);}
+            delay(HumanTiming.betweenCharacters(random, typingDelay));
         }
         delay(i_DELAY);
     }
+
+    /**
+     * La touche du caractère sur la disposition active, avec ses modificateurs ; saisie Unicode s'il n'y en a pas.
+     */
+    private void typeOnWindows(char character) {
+
+        Optional<WindowsKeys.Stroke> stroke = WindowsKeys.strokeFor(character);
+        if (stroke.isEmpty()) {
+            WindowsKeys.unicode(character, false);
+            delay(HumanTiming.hold(random));
+            WindowsKeys.unicode(character, true);
+            return;
+        }
+        WindowsKeys.Stroke key = stroke.get();
+        boolean modified = key.shift() || key.ctrl() || key.alt();
+        try {
+            if (key.ctrl()) {WindowsKeys.key(WindowsKeys.VK_CONTROL, false);}
+            if (key.alt()) {WindowsKeys.key(WindowsKeys.VK_MENU, false);}
+            if (key.shift()) {WindowsKeys.key(WindowsKeys.VK_SHIFT, false);}
+            if (modified) {delay(HumanTiming.modifierLead(random));}
+            WindowsKeys.key(key.vk(), false);
+            try {
+                delay(HumanTiming.hold(random));
+            }
+            finally {
+                WindowsKeys.key(key.vk(), true);
+            }
+            if (modified) {delay(HumanTiming.modifierLag(random));}
+        }
+        finally {
+            if (key.shift()) {WindowsKeys.key(WindowsKeys.VK_SHIFT, true);}
+            if (key.alt()) {WindowsKeys.key(WindowsKeys.VK_MENU, true);}
+            if (key.ctrl()) {WindowsKeys.key(WindowsKeys.VK_CONTROL, true);}
+        }
+    }
+
+    /**
+     * Hors Windows : la touche Java du caractère (disposition QWERTY supposée pour la ponctuation), Maj pour les
+     * majuscules.
+     */
+    private void typeWithRobot(char character) {
+
+        int keyCode = KeyEvent.getExtendedKeyCodeForChar(character);
+        if (keyCode == KeyEvent.VK_UNDEFINED) {
+            logger.warn("Caractère sans touche, ignoré : {}", character);
+            return;
+        }
+        try {
+            pressKey(keyCode, false, false, Character.isUpperCase(character));
+        }
+        catch (IllegalArgumentException e) {
+            logger.warn("Caractère impossible à taper ici, ignoré : {} ({})", character, e.getMessage());
+        }
+    }
 }
-    
-  

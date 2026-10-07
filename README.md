@@ -7,6 +7,32 @@ Construit avec Gradle (conventions de `Bot Parent`) : `./gradlew test`.
 
 ---
 
+## Clavier et souris
+
+Les gestes imitent une main, avec des durées tirées au hasard à chaque fois (`HumanTiming`) :
+
+| Geste | Durée |
+|---|---|
+| Modificateur (Maj, Ctrl, Alt) enfoncé avant la touche | 40 à 90 ms |
+| Touche tenue (`pressKey`, sauf durée imposée) | 60 à 120 ms |
+| Modificateur relâché après la touche, puis répit | 20 à 60 ms chacun |
+| Entre deux caractères de `typeString` | `ksuto.prh.peripherals.keyboard.typing.delay` à ±50 % |
+
+Une combinaison prend ainsi 140 à 330 ms, une touche seule 100 à 240 ms. Modificateurs et touche sont toujours relâchés,
+même en cas d'erreur.
+
+`typeString` tape caractère par caractère. **Sous Windows**, chaque caractère est cherché sur la disposition active du
+clavier (`VkKeyScanW` : en AZERTY, `1` = Maj+1, `@` = AltGr+0) et envoyé comme une vraie touche (`SendInput`), par
+l'API native de Java (`WindowsKeys`, FFM, sans DLL) ; un caractère qu'aucune touche ne produit passe par la saisie
+Unicode. Ailleurs, la touche Java du caractère (ponctuation en QWERTY), Maj pour les majuscules. Le programme doit être
+lancé avec `--enable-native-access=ALL-UNNAMED`.
+
+La souris suit des gestes courbes, accélérés puis ralentis, d'une durée qui dépend de la distance (`Mouse.naturalMoveTo`).
+`Peripheral.delay` attend précisément sans occuper le processeur (fil suspendu, seule la dernière 1,5 ms est attendue
+activement).
+
+---
+
 ## Recherche d'objets à l'écran
 
 `PictureSearch` (images) et `ColorSearch` (blocs de couleur) étendent `AbstractSeeker` :

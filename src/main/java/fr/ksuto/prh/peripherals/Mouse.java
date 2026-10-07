@@ -29,11 +29,9 @@ public class Mouse extends Peripheral {
     public static final  int       RIGHT                = InputEvent.BUTTON3_DOWN_MASK;
     public static final  double    X_ADJUSTEMENT_FACTOR = 0.0;
     public static final  double    Y_ADJUSTEMENT_FACTOR = 0.0;
-    private static final Dimension SCREEN_DIMENSION     = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
-    private static final int       SCREEN_HEIGHT        = (int) SCREEN_DIMENSION.getHeight();
+    private static final int       SCREEN_HEIGHT        = Screen.SCREEN_HEIGHT;
     private static final double    START_Y              = (SCREEN_HEIGHT / 2d);
-    private static final int       SCREEN_WIDTH         = (int) SCREEN_DIMENSION.getWidth();
-    private static final double    START_X              = (SCREEN_WIDTH / 2d);
+    private static final double    START_X              = (Screen.SCREEN_WIDTH / 2d);
     private final        Random    random;
     private static final Logger logger = LoggerFactory.getLogger(Mouse.class);
     @Inject
@@ -200,42 +198,38 @@ public class Mouse extends Peripheral {
     
     public void dragBottom2Top(int iDistance, int iButtonMask) {
         
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
-        for (int iBT = Screen.Y_START; iBT > Screen.Y_START - iDistance; iBT -= dragSpace) {
-            robot.mouseMove(Screen.SCREEN_WIDTH / 2, iBT);
-            delay(dragDelay);
-        }
-        release(iButtonMask, i_DELAY, false);
+        dragFromCenter(0, -1, iDistance, iButtonMask);
     }
     
     public void dragLeft2Right(int iDistance, int iButtonMask) {
         
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
-        for (int iLR = Screen.X_START; iLR < Screen.X_START + iDistance; iLR += dragSpace) {
-            robot.mouseMove(iLR, Screen.Y_START);
-            delay(dragDelay);
-        }
-        release(iButtonMask, i_DELAY, false);
+        dragFromCenter(1, 0, iDistance, iButtonMask);
     }
     
     public void dragRight2Left(int iDistance, int iButtonMask) {
         
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
-        for (int iLR = Screen.X_START; iLR > Screen.X_START - iDistance; iLR -= dragSpace) {
-            robot.mouseMove(iLR, Screen.Y_START);
-            delay(dragDelay);
-        }
-        release(iButtonMask, i_DELAY, false);
+        dragFromCenter(-1, 0, iDistance, iButtonMask);
     }
     
     public void dragTop2Bottom(int iDistance, int iButtonMask) {
         
-        moveAndPress(iButtonMask, Screen.X_START, Screen.Y_START, i_DELAY);
-        for (int iTB = Screen.Y_START; iTB < Screen.Y_START + iDistance; iTB += dragSpace) {
-            robot.mouseMove(Screen.X_START, iTB);
+        dragFromCenter(0, 1, iDistance, iButtonMask);
+    }
+    
+    /**
+     * Glisse depuis le centre de l'écran, en ligne droite, par pas de {@code dragSpace} pixels.
+     *
+     * @param dx direction horizontale (-1, 0, 1)
+     * @param dy direction verticale (-1, 0, 1)
+     */
+    private void dragFromCenter(int dx, int dy, int distance, int buttonMask) {
+        
+        moveAndPress(buttonMask, Screen.X_START, Screen.Y_START, i_DELAY);
+        for (int travelled = 0; travelled < distance; travelled += dragSpace) {
+            robot.mouseMove(Screen.X_START + dx * travelled, Screen.Y_START + dy * travelled);
             delay(dragDelay);
         }
-        release(iButtonMask, i_DELAY, false);
+        release(buttonMask, i_DELAY, false);
     }
     
     public void move(int x, int y) {
