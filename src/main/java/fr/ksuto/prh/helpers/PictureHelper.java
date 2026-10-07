@@ -56,8 +56,8 @@ public class PictureHelper {
             while (iterator.hasNext()) {
 
                 Parameter param = iterator.next();
-                seeker.setPrecision(param.getPrecision());
-                seeker.setAllowedErrorRate(param.getErrorRate());
+                seeker.setPrecision(param.precision());
+                seeker.setAllowedErrorRate(param.errorRate());
                 long time = System.nanoTime();
                 seeker.search();
                 long spent = System.nanoTime() - time;
@@ -65,16 +65,16 @@ public class PictureHelper {
 
                 if (spent > 3L * 1000 * 1000 * 1000) {
 
-                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, " + spentString + "s > 3s");
+                    logger.info("precision = " + param.precision() + " && errorRate = " + param.errorRate() + " => Retiré, " + spentString + "s > 3s");
                     iterator.remove();
                     noChangeLoops = 0;
                 } else if (seeker.getNumberOfResults() != numberOfMatches) {
-                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
+                    logger.info("precision = " + param.precision() + " && errorRate = " + param.errorRate() + " => Retiré, matche(s) " + seeker.getNumberOfResults() + " !=" +
                             " " + numberOfMatches);
                     iterator.remove();
                     noChangeLoops = 0;
                 } else {
-                    logger.info("precision = " + param.getPrecision() + " && errorRate = " + param.getErrorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
+                    logger.info("precision = " + param.precision() + " && errorRate = " + param.errorRate() + " => " + seeker.getNumberOfResults() + " matche(s)");
                     objects.get(0).getPositions().forEach(position -> {
                         logger.trace("    Area : " +
                                 position.getX() + ", " +
@@ -82,7 +82,7 @@ public class PictureHelper {
                                 (objects.get(0).getWidth() + position.getX()) + ", " +
                                 (objects.get(0).getHeight() + position.getY()));
                     });
-                    logger.info("    .setPrecision(" + param.getPrecision() + ").setAllowedErrorRate(" + param.getErrorRate() + ")");
+                    logger.info("    .setPrecision(" + param.precision() + ").setAllowedErrorRate(" + param.errorRate() + ")");
                 }
                 if (seeker.getNumberOfResults() != 0 && (closestParameters == null || Math.abs(numberOfMatches - seeker.getNumberOfResults()) < Math.abs(numberOfMatches - closestParametersMatches))) {
                     closestParametersMatches = seeker.getNumberOfResults();
@@ -94,18 +94,18 @@ public class PictureHelper {
         if (!top10BestParameters.isEmpty()) {
             logger.info("Top 10 best parameters :");
             top10BestParameters.forEach(parameter -> {
-                logger.info("    .setPrecision(" + parameter.getPrecision() + ").setAllowedErrorRate(" + parameter.getErrorRate() + ")");
+                logger.info("    .setPrecision(" + parameter.precision() + ").setAllowedErrorRate(" + parameter.errorRate() + ")");
             });
         }
         if (closestParameters == null) {
             logger.error("No working parameters found.");
         } else if (top10BestParameters.isEmpty()) {
             logger.warn("No perfect parameters found, closest match :");
-            logger.warn("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate() +
+            logger.warn("precision = " + closestParameters.precision() + " && errorRate = " + closestParameters.errorRate() +
                     ", found " + closestParametersMatches + "/" + " " + numberOfMatches);
         } else {
             logger.info("Best match :");
-            logger.warn("precision = " + closestParameters.getPrecision() + " && errorRate = " + closestParameters.getErrorRate());
+            logger.warn("precision = " + closestParameters.precision() + " && errorRate = " + closestParameters.errorRate());
         }
         //        if (seeker.hasAnyResults()) {
         //            logger.trace("Positions : ");

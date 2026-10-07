@@ -11,28 +11,53 @@ import fr.ksuto.prh.entities.*;
 import fr.ksuto.prh.peripherals.Mouse;
 import fr.ksuto.prh.peripherals.Peripheral;
 import fr.ksuto.prh.peripherals.Screen;
-import fr.ksuto.prh.tools.SearchHistoryDatabase;
+import fr.ksuto.prh.tools.SearchMemory;
 import fr.ksuto.prh.tools.ShowObjects;
 
 import java.awt.*;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Recherche d'objets à l'écran (images, blocs de couleur), avec deux mécanismes d'auto-apprentissage, mémorisés dans une
+ * base SQLite ({@link SearchMemory}, partagée par tous les bots) :
+ * <ul>
+ *   <li>{@link #learn(int)} : on connaît le nombre d'objets attendu ; chaque recherche essaie quelques combinaisons de
+ *   tolérances sur la même capture, note celles qui trouvent exactement ce nombre, et retient la plus fiable
+ *   ({@link ParameterLearning}) ;</li>
+ *   <li>{@link #optimize()} : les positions trouvées sont retenues ; une fois assez de trouvailles, la recherche se limite
+ *   au rectangle qui les englobe (plus une marge). Si rien n'y est trouvé, elle reprend aussitôt sur toute sa zone, et
+ *   après {@value #MISSES_BEFORE_RESET} échecs de suite la zone réduite est oubliée.</li>
+ * </ul>
+ * La mémoire est rangée par recherche : images cherchées et résolution de l'écran.
+ */
 @SuppressWarnings({"UnusedReturnValue"})
 public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends LocatedObject> {
 
+    /**
+     * Échecs de suite dans la zone réduite avant de l'oublier (l'objet a changé de place : fenêtre déplacée...).
+     */
+    static final int MISSES_BEFORE_RESET = 3;
+
+    /**
+     * Combinaisons de tolérances essayées par recherche en apprentissage : chacune coûte un parcours de la capture.
+     */
+    static final int DEFAULT_TRIALS_PER_SEARCH = 8;
+
+    private static SearchMemory sharedMemory;
+
     private final int delay;
-    public SearchHistoryDatabase searchHistoryDatabase;
-    public SearchHistory searchHistory;
     public boolean optimizing = false;
     public boolean learning = false;
     public Integer precision = null;
     public Integer expectedResults = null;
     public Double allowedErrorRate = null;
     public int exclusiveZone = 0;
-    public Robot robot = new Robot();
     public int clickDelay;
     public int searchDelay = 0;
     public boolean isTracking = false;
@@ -42,24 +67,57 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     public java.util.List<Screen.Zone> searchZones = new ArrayList<>();
     protected Properties properties;
     final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * Zone effectivement capturée et parcourue pendant une recherche : les positions trouvées y sont relatives, et
+     * ramenées à l'écran avec son origine.
+     */
+    Rectangle scanArea = new Rectangle();
+
     private ShowObjects<T> showObjects;
-    private S seeker;
+    private Robot robot;
+    private SearchMemory memory;
+    private Function<Rectangle, Frame> capture = Capture::zone;
     private boolean showTargets = false;
     private boolean debug = false;
     private boolean saveCaptureOnNotFound = false;
     private boolean clickUntilDisappear = false;
     private int iterationsBeforeOptimizing = 10;
     private int iterationsToKeep = 50;
+    private int trialsPerSearch = DEFAULT_TRIALS_PER_SEARCH;
+    private int missesInReducedArea = 0;
 
     public AbstractSeeker() throws AWTException {
 
         this.properties = PropertiesLoader.load("prh");
         this.delay = Integer.parseInt(properties.getProperty("ksuto.prh.peripherals.delay", "100"));
         this.clickDelay = this.delay;
-        if (properties.getProperty("ksuto.prh.database.offline", "false").equals("false")) {
-            searchHistoryDatabase = new SearchHistoryDatabase(properties.getProperty("ksuto.prh.database.name", "prh"));
-        }
     }
+
+    /**
+     * Mémoire partagée par toutes les recherches du programme : {@code ksuto.prh.database.file} (par défaut
+     * {@code ~/.ksuto/prh.db}), ou en mémoire seulement si {@code ksuto.prh.database.offline=true} ou si le fichier est
+     * inaccessible.
+     */
+    static synchronized SearchMemory sharedMemory(Properties properties) {
+
+        if (sharedMemory != null) {return sharedMemory;}
+        if (Boolean.parseBoolean(properties.getProperty("ksuto.prh.database.offline", "false"))) {
+            sharedMemory = SearchMemory.inMemory();
+            return sharedMemory;
+        }
+        Path file = Path.of(properties.getProperty("ksuto.prh.database.file", System.getProperty("user.home") + "/.ksuto/prh.db"));
+        try {
+            sharedMemory = SearchMemory.open(file);
+        }
+        catch (SQLException e) {
+            LoggerFactory.getLogger(AbstractSeeker.class).warn("Mémoire des recherches inaccessible ({}), apprentissage non conservé : {}", file, e.getMessage());
+            sharedMemory = SearchMemory.inMemory();
+        }
+        return sharedMemory;
+    }
+
+    // --- Configuration ---
 
     public AbstractSeeker<S, T> addSearchZone(Screen.Zone zone) {
 
@@ -67,6 +125,51 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
         return this;
     }
+
+    /**
+     * Source des captures d'écran (zone demandée → image) : {@link Capture#zone} par défaut ; une autre pour les tests ou
+     * une capture ailleurs que sur l'écran.
+     */
+    public AbstractSeeker<S, T> setCapture(Function<Rectangle, Frame> capture) {
+
+        this.capture = capture;
+        return this;
+    }
+
+    /**
+     * Mémoire d'apprentissage : la base partagée par défaut ; une autre pour les tests ou pour isoler un bot.
+     */
+    public AbstractSeeker<S, T> setMemory(SearchMemory memory) {
+
+        this.memory = memory;
+        return this;
+    }
+
+    /**
+     * @param trialsPerSearch combinaisons de tolérances essayées par recherche en apprentissage
+     */
+    public AbstractSeeker<S, T> setTrialsPerSearch(int trialsPerSearch) {
+
+        this.trialsPerSearch = Math.max(1, trialsPerSearch);
+        return this;
+    }
+
+    private SearchMemory memory() {
+
+        if (memory == null) {memory = sharedMemory(properties);}
+        return memory;
+    }
+
+    /**
+     * Clé de cette recherche dans la mémoire : les images cherchées et la résolution de l'écran (les positions et les
+     * tolérances apprises ne valent que pour elle).
+     */
+    public String getSearchKey() {
+
+        return getObjectsHash() + "@" + Screen.SCREEN_WIDTH + "x" + Screen.SCREEN_HEIGHT;
+    }
+
+    // --- Attente et clics ---
 
     public AbstractSeeker<S, T> await() {
 
@@ -80,7 +183,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         while (System.currentTimeMillis() < until) {
             logger.debug("Time's up : " + (int) Math.floor((until - System.currentTimeMillis()) / 1000f) + "s    ");
             search();
-            if (hasAnyResults() && (expectedResults == null || getNumbreOfResults() == expectedResults)) {
+            if (expectedFound()) {
                 return this;
             }
         }
@@ -99,23 +202,32 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
 
+    /**
+     * Oublie la zone de recherche réduite et les positions retenues.
+     */
     public AbstractSeeker<S, T> clearAreaOptimization() {
 
-        searchHistoryDatabase.clearAreaOptimization(getObjectsHash());
+        memory().clearArea(getSearchKey());
 
         return this;
     }
 
+    /**
+     * Oublie tout ce qui a été appris sur cette recherche.
+     */
     public AbstractSeeker<S, T> clearObjectOptimizations() {
 
-        searchHistoryDatabase.clearObjectOptimization(getObjectsHash());
+        memory().clear(getSearchKey());
 
         return this;
     }
 
-    public AbstractSeeker<S, T> clearParamtersOptimization() {
+    /**
+     * Oublie les tolérances apprises.
+     */
+    public AbstractSeeker<S, T> clearParametersOptimization() {
 
-        searchHistoryDatabase.clearSearchOptimization(getObjectsHash());
+        memory().clearParameters(getSearchKey());
 
         return this;
     }
@@ -148,7 +260,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 }
             }
         }
-        while (clickUntilDisappear && clearResults().search().hasAnyResults());
+        while (clickUntilDisappear && search().hasAnyResults());
 
         return this;
     }
@@ -209,30 +321,6 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return null;
     }
 
-    public Parameter getOptimalSearchParameter(List<Parameter> parameters) {
-
-        if (learning) {
-
-            if (parameters.isEmpty()) {
-                for (int precision = 0; precision < 51; precision += 5) {
-                    for (double errorRate = 0.0; errorRate <= 0.30; errorRate += 0.05) {
-                        parameters.add(new Parameter(precision, errorRate));
-                    }
-                }
-            }
-
-            removeInoperativeParameters(parameters, expectedResults);
-        }
-
-        Parameter parameter;
-        if (parameters.isEmpty()) {
-            parameter = new Parameter(0, 0.0);
-        } else {
-            parameter = parameters.get(0);
-        }
-        return parameter;
-    }
-
     public boolean hasAnyResults() {
 
         return objects.stream().anyMatch(LocatedObject::isPresent);
@@ -270,15 +358,13 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return showObjects;
     }
 
+    /**
+     * Apprentissage des tolérances : la recherche doit trouver exactement {@code expectedResults} objets.
+     */
     public AbstractSeeker<S, T> learn(int expectedResults) {
 
         this.learning = true;
         this.expectedResults = expectedResults;
-        setShowTargets(true);
-
-        String hash = getObjectsHash();
-
-        this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
 
         return this;
     }
@@ -298,24 +384,17 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return optimize(iterationsBeforeOptimizing, 100);
     }
 
+    /**
+     * Réduction de la zone de recherche aux endroits où les objets ont été trouvés.
+     *
+     * @param iterationsBeforeOptimizing positions retenues nécessaires avant de réduire la zone
+     * @param iterationsToKeep           positions retenues au plus (les plus récentes)
+     */
     public AbstractSeeker<S, T> optimize(int iterationsBeforeOptimizing, int iterationsToKeep) {
 
         this.optimizing = true;
         this.iterationsBeforeOptimizing = iterationsBeforeOptimizing;
-        this.iterationsToKeep = iterationsToKeep;
-
-        String hash = getObjectsHash();
-
-        this.searchHistory = searchHistoryDatabase.selectSearchHistory(hash, true, false, true, true);
-
-        if (searchHistory.getOptimisedSearchArea() != null) {
-
-            SearchHistory.Area area = searchHistory.getOptimisedSearchArea();
-            searchZone = new Screen.Zone(area.getX_1(), area.getX_2(), area.getY_1(), area.getY_2());
-            if (debug || showTargets) {
-                initShowObjects(true);
-            }
-        }
+        this.iterationsToKeep = Math.max(iterationsToKeep, iterationsBeforeOptimizing);
 
         return this;
     }
@@ -324,22 +403,209 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
         objects.clear();
 
-        return (AbstractSeeker<S, T>) this;
+        return this;
     }
 
+    // --- Recherche ---
+
+    /**
+     * Cherche les objets à l'écran : les résultats précédents sont remplacés (sauf en suivi, où ils sont mis à jour).
+     */
     public AbstractSeeker<S, T> search() {
 
-        if (!searchZones.isEmpty()) {
+        if (!isTracking) {clearResults();}
 
+        if (!searchZones.isEmpty()) {
             for (Screen.Zone zone : searchZones) {
-                searchZone = zone;
-                search(false);
+                searchIn(zone.getRectangle(), false);
             }
-        } else {
-            search(false);
+        }
+        else {
+            searchIn(searchZone.getRectangle(), optimizing);
         }
 
+        if (optimizing) {rememberPositions();}
+
         return this;
+    }
+
+    /**
+     * Les objets attendus sont trouvés : leur nombre exact s'il est connu, au moins un sinon.
+     */
+    public boolean expectedFound() {
+
+        return expectedResults == null ? hasAnyResults() : numberOfResults() == expectedResults;
+    }
+
+    /**
+     * Recherche dans une zone, réduite à la zone apprise si {@code reducible} ; retour à la zone complète si rien n'y est
+     * trouvé.
+     */
+    private void searchIn(Rectangle zone, boolean reducible) {
+
+        long startTime = System.currentTimeMillis();
+        Peripheral.delay(searchDelay);
+
+        // Pas de zone réduite en apprentissage : un objet hors de la zone fausserait le jugement des tolérances
+        Optional<Rectangle> reduced = reducible && !learning ? memory().area(getSearchKey()).map(area -> area.intersection(zone)).filter(area -> !area.isEmpty())
+                                                : Optional.empty();
+        Rectangle area = reduced.orElse(zone);
+
+        Frame captured = captureAndScan(area);
+
+        if (reduced.isPresent()) {
+            if (expectedFound()) {
+                missesInReducedArea = 0;
+            }
+            else {
+                missesInReducedArea++;
+                if (missesInReducedArea >= MISSES_BEFORE_RESET) {
+                    logger.debug("{} : introuvable {} fois dans sa zone réduite, zone oubliée", getObjectsHash(), missesInReducedArea);
+                    memory().clearArea(getSearchKey());
+                    missesInReducedArea = 0;
+                }
+                if (!isTracking) {clearResults();}
+                captured = captureAndScan(zone);
+            }
+        }
+
+        if (debug || showTargets) {
+            initShowObjects(false).setLocatedObjects(objects);
+        }
+
+        long elapsed = System.currentTimeMillis() - startTime;
+        if (elapsed > 1000) {
+            logger.warn(getObjectsHash() + " search took " + elapsed + "ms");
+        }
+
+        if (!hasAnyResults() && (saveCaptureOnNotFound || Boolean.parseBoolean(properties.getProperty("ksuto.prh.seeker.saveCaptureOnNotFound", "false")))) {
+            InOut.writeImage(captured.image(), ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis() + ".png");
+        }
+    }
+
+    private Frame captureAndScan(Rectangle area) {
+
+        Frame captured = capture.apply(area);
+        scanArea = new Rectangle(area);
+
+        if (debug) {
+            InOut.writeImage(captured.image(), "image");
+        }
+
+        if (isTracking) {
+            updatePositions(captured);
+        }
+
+        if (learning && expectedResults != null) {
+            learnOn(captured);
+        }
+        else if (precision == null || allowedErrorRate == null) {
+            // Tolérances non précisées : celles apprises par une recherche précédente, s'il y en a
+            ParameterLearning.best(memory().parameterStats(getSearchKey())).ifPresent(this::apply);
+        }
+
+        scan(captured);
+        return captured;
+    }
+
+    /**
+     * Essaie quelques combinaisons de tolérances sur cette capture, note celles qui trouvent le nombre d'objets attendu,
+     * et applique la meilleure connue.
+     */
+    private void learnOn(Frame captured) {
+
+        String                                 key      = getSearchKey();
+        Map<Parameter, ParameterLearning.Stat> stats    = new HashMap<>(memory().parameterStats(key));
+        Map<Parameter, Boolean>                outcomes = new LinkedHashMap<>();
+
+        for (Parameter trial : ParameterLearning.nextTrials(stats, trialsPerSearch)) {
+            clearResults(); // chaque combinaison est jugée sur ses seuls résultats
+            apply(trial);
+            scan(captured);
+            boolean success = numberOfResults() == expectedResults;
+            outcomes.put(trial, success);
+            stats.merge(trial, ParameterLearning.Stat.NONE.plus(success), (old, added) -> old.plus(success));
+        }
+        memory().recordTrials(key, outcomes);
+        clearResults();
+
+        Optional<Parameter> best = ParameterLearning.best(stats);
+        if (best.isPresent()) {
+            apply(best.get());
+        }
+        else if (debug) {
+            logger.debug("{} : aucune combinaison de tolérances n'a encore fait ses preuves", getObjectsHash());
+        }
+    }
+
+    private void apply(Parameter parameter) {
+
+        setPrecision(parameter.precision());
+        setAllowedErrorRate(parameter.errorRate());
+    }
+
+    /**
+     * Parcourt la capture et ajoute les objets trouvés (positions à l'écran, origine de {@link #scanArea}).
+     */
+    private void scan(Frame captured) {
+
+        for (T object : objects) {
+
+            Position currentPosition = new Position(0, 0);
+
+            for (; currentPosition.getY() < captured.height() - (object.getHeight() + exclusiveZone); currentPosition.incY()) {
+                currentPosition.setX(0);
+                for (; currentPosition.getX() < captured.width() - (object.getWidth() + exclusiveZone); currentPosition.incX()) {
+
+                    while (overlapingExists(currentPosition)) {
+                        currentPosition.setX(currentPosition.getX() + exclusiveZone * 2 + object.getWidth());
+                    }
+
+                    searchObject(captured, currentPosition, object);
+                }
+            }
+
+            object.getPositions().sort((o1, o2) -> o1.getY() == o2.getY() ? o1.getX() - o2.getX() : o1.getY() - o2.getY());
+        }
+    }
+
+    /**
+     * Retient les positions trouvées et, une fois assez de positions, réduit la zone de recherche à leur rectangle
+     * englobant. Une écriture groupée par recherche.
+     */
+    private void rememberPositions() {
+
+        List<Point> found = getAllPositions().stream().map(position -> new Point(position.getX(), position.getY())).toList();
+        if (found.isEmpty()) {return;}
+
+        String key = getSearchKey();
+        memory().addPositions(key, found, iterationsToKeep);
+        List<Point> positions = memory().positions(key);
+        if (positions.size() >= iterationsBeforeOptimizing) {
+            int maxWidth  = objects.stream().mapToInt(LocatedObject::getWidth).max().orElse(0);
+            int maxHeight = objects.stream().mapToInt(LocatedObject::getHeight).max().orElse(0);
+            memory().setArea(key, areaAround(positions, maxWidth, maxHeight, searchZone.getRectangle()));
+        }
+    }
+
+    /**
+     * Zone de recherche autour des positions trouvées : leur rectangle englobant, élargi de la moitié de son étendue, de
+     * la taille du plus grand objet et de 10 pixels, borné à la zone de recherche complète.
+     */
+    static Rectangle areaAround(List<Point> positions, int objectWidth, int objectHeight, Rectangle bounds) {
+
+        int x1 = positions.stream().mapToInt(p -> p.x).min().orElse(bounds.x);
+        int x2 = positions.stream().mapToInt(p -> p.x).max().orElse(bounds.x);
+        int y1 = positions.stream().mapToInt(p -> p.y).min().orElse(bounds.y);
+        int y2 = positions.stream().mapToInt(p -> p.y).max().orElse(bounds.y);
+
+        int growth = 10;
+        int left   = x1 - (x2 - x1) / 2 - growth;
+        int top    = y1 - (y2 - y1) / 2 - growth;
+        int right  = x2 + (x2 - x1) / 2 + objectWidth + 1 + growth;
+        int bottom = y2 + (y2 - y1) / 2 + objectHeight + 1 + growth;
+
+        return new Rectangle(left, top, right - left, bottom - top).intersection(bounds);
     }
 
     public boolean shouldClose() {
@@ -388,16 +654,12 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
     public boolean waitAndClick(int milliseconds, boolean clickFirstResultOnly) {
 
-        if (clickUntilDisappear) {
-            clearResults();
-        }
-
         await(milliseconds);
 
         boolean found;
 
         do {
-            found = expectedResults == null ? getNumbreOfResults() >= 1 : getNumbreOfResults() == expectedResults;
+            found = expectedResults == null ? numberOfResults() >= 1 : numberOfResults() == expectedResults;
 
             if (found) {
                 if (clickFirstResultOnly) {
@@ -409,7 +671,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
                 }
             }
         }
-        while (clickUntilDisappear && clearResults().search().hasAnyResults());
+        while (clickUntilDisappear && search().hasAnyResults());
 
         clean();
 
@@ -437,79 +699,59 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
     abstract boolean isObjectFound(Frame capturedScreen, Position currentPosition, T object);
 
+    /**
+     * Un objet déjà trouvé occupe cette position de la capture (positions retenues : à l'écran).
+     */
     boolean overlapingExists(Position currentPosition) {
 
-        if (!objects.isEmpty()) {
-            for (LocatedObject object : objects) {
-
-                for (Position objectPosition : object.getPositions()) {
-
-                    if (isOverlaping(currentPosition, objectPosition, object)) {
-
-                        return true;
-                    }
+        for (LocatedObject object : objects) {
+            for (Position objectPosition : object.getPositions()) {
+                if (isOverlaping(currentPosition, objectPosition, object)) {
+                    return true;
                 }
             }
         }
         return false;
     }
 
+    /**
+     * Cherche l'objet à cette position de la capture ; s'il y est, l'ajoute à ses positions, ramenée à l'écran avec
+     * l'origine de {@link #scanArea}.
+     */
     abstract boolean searchObject(Frame capturedScreen, Position currentPosition, T object);
 
+    /**
+     * Suivi : chaque objet déjà trouvé est cherché autour de sa dernière position (± {@link #maximumMovement}), et
+     * retiré s'il n'y est plus.
+     */
     void updatePositions(Frame capturedScreen) {
 
         for (T object : objects) {
 
-            Iterator<Position> positionsIterator = object.getPositions().iterator();
+            ListIterator<Position> positionsIterator = object.getPositions().listIterator();
 
             while (positionsIterator.hasNext()) {
 
                 Position position = positionsIterator.next();
+                int      relativeX = position.getX() - scanArea.x;
+                int      relativeY = position.getY() - scanArea.y;
+                Position moved     = null;
 
-                Position currentPosition = new Position(Math.max(0, position.getX() - exclusiveZone - maximumMovement),
-                        Math.max(0, position.getY() - exclusiveZone - maximumMovement));
-
-                boolean objectFound = false;
-
-                for (; currentPosition.getY() < position.getY() + object.getHeight() + exclusiveZone + maximumMovement &&
-                        currentPosition.getY() < capturedScreen.height(); currentPosition.incY()) {
-                    currentPosition.setX(Math.max(0, position.getX() - exclusiveZone - maximumMovement));
-                    for (; currentPosition.getX() < position.getX() + object.getWidth() + exclusiveZone + maximumMovement &&
-                            currentPosition.getX() < capturedScreen.width(); currentPosition.incX()) {
-
-                        objectFound = isObjectFound(capturedScreen, currentPosition, object);
-
-                        if (objectFound) {
-                            boolean hasMoved = position.getY() != currentPosition.getY() ||
-                                    position.getX() != currentPosition.getX();
-                            position = currentPosition;
-                            position.setHasMoved(hasMoved);
+                for (int y = Math.max(0, relativeY - exclusiveZone - maximumMovement);
+                     moved == null && y < relativeY + exclusiveZone + maximumMovement && y < capturedScreen.height(); y++) {
+                    for (int x = Math.max(0, relativeX - exclusiveZone - maximumMovement);
+                         moved == null && x < relativeX + exclusiveZone + maximumMovement && x < capturedScreen.width(); x++) {
+                        if (isObjectFound(capturedScreen, new Position(x, y), object)) {
+                            moved = new Position(x + scanArea.x, y + scanArea.y);
+                            moved.setHasMoved(x != relativeX || y != relativeY);
                         }
                     }
                 }
 
-                if (!objectFound) {
-                    positionsIterator.remove();
-                }
+                if (moved == null) {positionsIterator.remove();}
+                else {positionsIterator.set(moved);}
             }
-        }
-    }
-
-    private void addPositionAndOptimize(Position currentPosition, boolean relative) {
-
-        SearchHistory.Position position;
-        if (relative) {
-            position = new SearchHistory.Position(currentPosition.getX() + searchZone.getXMin(), currentPosition.getY() + searchZone.getYMin());
-        } else {
-            position = new SearchHistory.Position(currentPosition.getX(), currentPosition.getY());
-        }
-        searchHistoryDatabase.addPosition(position, searchHistory.getHash());
-        searchHistoryDatabase.removePositionsOverLimit(searchHistory.getHash(), iterationsToKeep);
-
-        searchHistory.setIterations(searchHistoryDatabase.increaseIterations(searchHistory.getHash()));
-
-        if (searchHistory.getIterations() >= iterationsBeforeOptimizing) {
-            optimiseSearchArea();
+            object.setPresent(!object.getPositions().isEmpty());
         }
     }
 
@@ -521,209 +763,28 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     private AbstractSeeker<S, T> clickWithOffset(Position position, int offsetX, int offsetY) {
 
         try {
+            if (robot == null) {robot = new Robot();}
             Peripheral.delay(clickDelay);
             (new Mouse()).move(position.getX() + offsetX, position.getY() + offsetY);
             robot.mousePress(Mouse.LEFT);
             Peripheral.delay(delay);
             robot.mouseRelease(Mouse.LEFT);
         } catch (AWTException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("Clic impossible : {}", e.getMessage());
         }
         return this;
     }
 
     private boolean isOverlaping(Position currentPosition, Position objectPosition, LocatedObject object) {
 
-        if (currentPosition.getY() + object.getHeight() + exclusiveZone <= (objectPosition.getY() - searchZone.getYMin())
-                || currentPosition.getY() >= (objectPosition.getY() - searchZone.getYMin()) + object.getHeight() + exclusiveZone) {
+        int objectX = objectPosition.getX() - scanArea.x;
+        int objectY = objectPosition.getY() - scanArea.y;
+        if (currentPosition.getY() + object.getHeight() + exclusiveZone <= objectY
+                || currentPosition.getY() >= objectY + object.getHeight() + exclusiveZone) {
             return false;
         }
-        if (currentPosition.getX() + object.getWidth() + exclusiveZone <= (objectPosition.getX() - searchZone.getXMin())
-                || currentPosition.getX() >= (objectPosition.getX() - searchZone.getXMin()) + object.getWidth() + exclusiveZone) {
-            return false;
-        }
-        return true;
-    }
-
-    private AbstractSeeker<S, T> learningSearch() {
-
-        return search(true);
-    }
-
-    private void optimiseSearchArea() {
-
-        SearchHistory locatedObject = searchHistoryDatabase.selectSearchHistory(searchHistory.getHash(), false, true, false, false);
-
-        //        Zone de recherche
-        int x1 = Integer.MAX_VALUE, x2 = 0, y1 = Integer.MAX_VALUE, y2 = 0;
-        for (SearchHistory.Position position : locatedObject.getPositions()) {
-
-            if (position.getPosition_x() < x1) {
-                x1 = position.getPosition_x();
-            }
-            if (position.getPosition_x() > x2) {
-                x2 = position.getPosition_x();
-            }
-            if (position.getPosition_y() < y1) {
-                y1 = position.getPosition_y();
-            }
-            if (position.getPosition_y() > y2) {
-                y2 = position.getPosition_y();
-            }
-        }
-
-        //        Expansion de la zone de recherche proportionnellement à sa taille (Minimum 0, Maximum screen width)
-        int amplitudeX = x2 - x1;
-        int amplitudeY = y2 - y1;
-        int percent = 2;
-        x1 = Math.max(0, x1 - amplitudeX / percent);
-        x2 = Math.min(Screen.SCREEN_WIDTH, x2 + amplitudeX / percent);
-        y1 = Math.max(0, y1 - amplitudeY / percent);
-        y2 = Math.min(Screen.SCREEN_HEIGHT, y2 + amplitudeY / percent);
-
-        //        Dimensions maximales des objets
-        final int[] maximums = {0, 0};
-        objects.forEach(object -> {
-            if (object.getWidth() > maximums[0]) {
-                maximums[0] = object.getWidth() + 1;
-            }
-            if (object.getHeight() > maximums[1]) {
-                maximums[1] = object.getHeight() + 1;
-            }
-        });
-
-        //        Expansion de ('growth') de la zone de recherche
-        int growth = 10;
-        SearchHistory.Area area = new SearchHistory.Area(x1 - growth, x2 + maximums[0] + growth, y1 - growth, y2 + maximums[1] + growth);
-
-        searchHistoryDatabase.updateOptimisedSearchArea(area, searchHistory.getHash());
-        searchHistory.setOptimisedSearchArea(area);
-
-        searchHistoryDatabase.resetIterations(locatedObject.getHash());
-    }
-
-    private List<Parameter> removeInoperativeParameters(List<Parameter> parameters, int numberOfMatches) {
-
-        Iterator<Parameter> iterator = parameters.iterator();
-
-        while (iterator.hasNext()) {
-
-            Parameter param = iterator.next();
-            setPrecision(param.getPrecision());
-            setAllowedErrorRate(param.getErrorRate());
-            learningSearch();
-
-            logger.trace("param.getErrorRate() = " + param.getErrorRate() + ", param.getPrecision() = " + param.getPrecision());
-
-            if (objects.get(0).getPositions().size() != numberOfMatches) {
-                iterator.remove();
-            } else {
-                if (debug) {
-                    logger.trace("   > OPTIMIZING <   ");
-                }
-                for (Position position : objects.get(0).getPositions()) {
-                    addPositionAndOptimize(position, false);
-                }
-            }
-        }
-
-        if (!parameters.isEmpty()) {
-            searchHistoryDatabase.updateSearchParameters(searchHistory.getHash(), parameters);
-        }
-
-        return parameters;
-    }
-
-    private AbstractSeeker<S, T> search(boolean learningSearch) {
-
-        long startTime = System.currentTimeMillis();
-
-        Peripheral.delay(searchDelay);
-
-        boolean hidedObjects = false;
-
-        if (showObjects != null && showObjects.isVisible()) {
-            //                showObjects.setVisible(false);
-            hidedObjects = true;
-        }
-
-        Frame capturedScreen = Capture.zone(searchZone.getRectangle());
-
-        if (debug) {
-            InOut.writeImage(capturedScreen.image(), "image");
-        }
-
-        if (hidedObjects) {
-            showObjects.setVisible(true);
-        }
-
-        if (isTracking) {
-            updatePositions(capturedScreen);
-        }
-
-        if ((learning || precision == null || allowedErrorRate == null) && !learningSearch) {
-
-            if (debug && learning) {
-                logger.trace(">>>> LEARNING <<<<");
-            }
-
-            java.util.List<Parameter> parameters = Parameter.fromDTOs(searchHistoryDatabase.selectSearchParameters(searchHistory.getHash()));
-
-            Parameter parameter = getOptimalSearchParameter(parameters);
-
-            precision = parameter.getPrecision();
-            allowedErrorRate = parameter.getErrorRate();
-        }
-
-        for (T object : objects) {
-
-            Position currentPosition = new Position(0, 0);
-
-            for (; currentPosition.getY() < searchZone.getHeight() - (object.getHeight() + exclusiveZone); currentPosition.incY()) {
-                currentPosition.setX(0);
-                for (; currentPosition.getX() < searchZone.getWidth() - (object.getWidth() + exclusiveZone); currentPosition.incX()) {
-
-                    while (overlapingExists(currentPosition)) {
-                        //                        logger.trace("overlapping: x =" + currentPosition.getX() +", y =" + currentPosition.getY());
-                        currentPosition.setX(currentPosition.getX() + exclusiveZone * 2 + object.getWidth());
-                    }
-
-                    boolean found = searchObject(capturedScreen, currentPosition, object);
-
-                    if (found && optimizing && !learningSearch) {
-
-                        if (debug) {
-                            logger.debug(">>>> OPTIMIZING");
-                        }
-
-                        addPositionAndOptimize(currentPosition, true);
-                    }
-                }
-            }
-
-            object.getPositions().sort((o1, o2) -> {
-                if (o1.getY() == o2.getY()) {
-                    return o1.getX() - o2.getX();
-                } else {
-                    return o1.getY() - o2.getY();
-                }
-            });
-        }
-
-        if (debug || showTargets) {
-            showObjects.setLocatedObjects(objects);
-        }
-
-        long elapsed = System.currentTimeMillis() - startTime;
-        if (elapsed > 1000) {
-            logger.warn(getObjectsHash() + " search took " + elapsed + "ms");
-        }
-
-        if (properties.getProperty("ksuto.prh.seeker.saveCaptureOnNotFound", "false").equals("true") || saveCaptureOnNotFound) {
-            InOut.writeImage(capturedScreen.image(), ".debug/NotFound_" + getObjectsHash() + "_" + System.currentTimeMillis() + ".png");
-        }
-
-        return this;
+        return currentPosition.getX() + object.getWidth() + exclusiveZone > objectX
+               && currentPosition.getX() < objectX + object.getWidth() + exclusiveZone;
     }
 
     public List<Position> getAllPositions() {
@@ -786,23 +847,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
 
     public int getNumberOfResults() {
 
-        int numberOfResults = 0;
-
-        for (T o : objects) {
-            numberOfResults += o.getPositions().size();
-        }
-
-        return numberOfResults;
-    }
-
-    //    TODO : remove !
-    private int getNumbreOfResults() {
-
-        return objects.stream()
-                .map(LocatedObject::getPositions)
-                .filter(Objects::nonNull)
-                .mapToInt(java.util.List::size)
-                .sum();
+        return numberOfResults();
     }
 
     public List<T> getObjects() {
@@ -831,7 +876,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
 
     /**
-     * @param precision de préférence < 100
+     * @param precision tolérance de couleur par canal (0 = pixel identique), de préférence &lt; 100
      * @return Seeker
      */
     public AbstractSeeker<S, T> setPrecision(Integer precision) {
@@ -889,11 +934,10 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
         return this;
     }
 
+    /**
+     * Zone de recherche complète ; avec {@link #optimize()}, la recherche se limite à la partie apprise de cette zone.
+     */
     public AbstractSeeker<S, T> setSearchZone(Screen.Zone zone) {
-
-        if (searchZone != null == optimizing) {
-            return this;
-        }
 
         this.searchZone = zone;
 
@@ -910,7 +954,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
     }
 
     /**
-     * @param tracking Permet d'afficher ou non une JFrame encadrant les résultats (défaut false)
+     * @param tracking suivre les objets déjà trouvés d'une recherche à l'autre (défaut false)
      * @return Seeker
      */
     public AbstractSeeker<S, T> setTracking(boolean tracking) {

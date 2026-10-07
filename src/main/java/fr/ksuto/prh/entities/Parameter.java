@@ -1,35 +1,17 @@
 package fr.ksuto.prh.entities;
 
-import lombok.Data;
+/**
+ * Tolérances d'une recherche d'image.
+ *
+ * @param precision tolérance de couleur par canal (0 = pixel identique ; plus la valeur est haute, plus la recherche est
+ *                  permissive), de préférence &lt; 100
+ * @param errorRate part des pixels de l'image de référence qui peuvent différer, de 0.0 à 1.0
+ */
+public record Parameter(int precision, double errorRate) {
 
-import java.util.ArrayList;
-import java.util.List;
+    public Parameter {
 
-@Data
-public class Parameter {
-    
-    private int    precision = 0;
-    private double errorRate = 0.0;
-    
-    public Parameter(int precision, double errorRate) {
-        
-        this.precision = precision;
-        this.errorRate = errorRate;
-    }
-    
-    public static List<Parameter> fromDTOs(List<SearchHistory.Parameter> searchParameters) {
-        
-        List<Parameter> parameters = new ArrayList<>();
-        
-        for (SearchHistory.Parameter searchParameter : searchParameters) {
-            parameters.add(fromDTO(searchParameter));
-        }
-        
-        return parameters;
-    }
-    
-    public static Parameter fromDTO(SearchHistory.Parameter searchParameter) {
-        
-        return new Parameter(searchParameter.getPrecision(), searchParameter.getError_rate());
+        // Arrondi au centième : les pas de 0.05 additionnés ne tombent pas juste en virgule flottante (0.15000000000000002)
+        errorRate = Math.round(errorRate * 100) / 100.0;
     }
 }

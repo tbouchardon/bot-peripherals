@@ -53,8 +53,8 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
 
         clearResults();
 
-        setPrecision(workingParameters.getPrecision());
-        setAllowedErrorRate(workingParameters.getErrorRate());
+        setPrecision(workingParameters.precision());
+        setAllowedErrorRate(workingParameters.errorRate());
 
         return this;
     }
@@ -75,7 +75,7 @@ public class PictureSearch extends AbstractSeeker<PictureSearch, Picture> {
 
         if (isPictureFound(capturedScreen, picture, currentPosition)) {
 
-            picture.getPositions().add(new Position(currentPosition.getX() + searchZone.getXMin(), currentPosition.getY() + searchZone.getYMin()));
+            picture.getPositions().add(new Position(currentPosition.getX() + scanArea.x, currentPosition.getY() + scanArea.y));
             picture.setPresent(true);
             return true;
         }

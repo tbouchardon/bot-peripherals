@@ -57,7 +57,7 @@ public class ColorSearch extends AbstractSeeker<ColorSearch, ColorBlock> {
         
         if (isBlockFound(capturedScreen, currentPosition, colorBlock)) {
             
-            Position position = new Position(currentPosition.getX() + searchZone.getXMin(), currentPosition.getY() + searchZone.getYMin());
+            Position position = new Position(currentPosition.getX() + scanArea.x, currentPosition.getY() + scanArea.y);
             position.setObject(currentPosition.getObject());
             colorBlock.getPositions().add(position);
             int cote = (int) Math.sqrt(colorBlock.getSize());

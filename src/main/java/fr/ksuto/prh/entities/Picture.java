@@ -44,6 +44,19 @@ public class Picture extends LocatedObject {
     }
     
     /**
+     * Image de référence déjà chargée (générée, ou lue ailleurs que dans les ressources).
+     *
+     * @param name nom de l'image, qui sert de clé à la mémoire des recherches
+     */
+    public Picture(String name, BufferedImage image) {
+
+        this.path = name;
+        this.referenceImage = image;
+        this.setHeight(image.getHeight());
+        this.setWidth(image.getWidth());
+    }
+
+    /**
      * @return l'image de référence sous forme de {@link Frame} (accès rapide aux pixels), recalculée si l'image change
      */
     public Frame getReferenceFrame() {
