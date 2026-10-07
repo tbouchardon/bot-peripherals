@@ -10,9 +10,9 @@ Construit avec Gradle (conventions de `Bot Parent`) : `./gradlew test`.
 | Projet | Jeu | Ce qu'il utilise | État |
 |---|---|---|---|
 | [ClockWork](../ClockWork) | World of Warcraft | Capture d'écran (DXGI), clavier (gestes humains, ciblage, frappe), souris (pêche). Pas de recherche d'image : l'état du jeu arrive par la grille de l'addon. | Maintenu |
-| Bot_Rumble | Warcraft Rumble | Recherche d'image (`PictureSearch`), clics. | Non maintenu, encore sous Maven avec l'ancien parent : à adapter à la 2.3.0 (voir ci-dessous) avant de le relancer. |
+| Bot_Rumble | Warcraft Rumble | Recherche d'image (`PictureSearch`), clics. | Abandonné, resté sous Maven avec l'ancien parent |
 
-**Changements de la 2.3.0** à reporter dans un bot existant : `search()` remplace les résultats au lieu de les
+**Changements de la 2.3.0** pour un bot écrit avant : `search()` remplace les résultats au lieu de les
 additionner ; `Parameter` est un record (`precision()`, `errorRate()`) ; `clearParamtersOptimization()` devient
 `clearParametersOptimization()` ; le constructeur de `Mouse` ne déclare plus `NoSuchAlgorithmException` ;
 `CaptureScheduler` passe dans `fr.ksuto.prh.capture` ; plus de base PostgreSQL à installer (voir *Auto-apprentissage*).
