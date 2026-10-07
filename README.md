@@ -64,7 +64,7 @@ oubliée. Pas de zone réduite pendant un apprentissage de tolérances, qu'elle 
 
 | Propriété | Défaut | Sens |
 |---|---|---|
-| `ksuto.prh.database.file` | `~/.ksuto/prh.db` | Fichier de la mémoire. |
+| `ksuto.prh.database.file` | `~/.ksuto/prh.db` | Fichier de la mémoire. Un `~` initial désigne le dossier de l'utilisateur, sous Windows aussi (`C:\Users\nom\.ksuto\prh.db`). |
 | `ksuto.prh.database.offline` | `false` | `true` : mémoire vive seulement, rien n'est conservé. |
 
 Une base inaccessible est signalée une fois et remplacée par une mémoire vive : le bot cherche sans mémoire, sans

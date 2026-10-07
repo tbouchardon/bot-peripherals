@@ -106,7 +106,7 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             sharedMemory = SearchMemory.inMemory();
             return sharedMemory;
         }
-        Path file = Path.of(properties.getProperty("ksuto.prh.database.file", System.getProperty("user.home") + "/.ksuto/prh.db"));
+        Path file = databaseFile(properties);
         try {
             sharedMemory = SearchMemory.open(file);
         }
@@ -115,6 +115,19 @@ public abstract class AbstractSeeker<S extends AbstractSeeker<S, T>, T extends L
             sharedMemory = SearchMemory.inMemory();
         }
         return sharedMemory;
+    }
+
+    /**
+     * Fichier de la mémoire : {@code ksuto.prh.database.file}, où un {@code ~} initial désigne le dossier de
+     * l'utilisateur (sous Windows aussi : {@code C:\Users\nom}) ; par défaut {@code ~/.ksuto/prh.db}.
+     */
+    static Path databaseFile(Properties properties) {
+
+        String file = properties.getProperty("ksuto.prh.database.file", "~/.ksuto/prh.db").trim();
+        if (file.equals("~") || file.startsWith("~/") || file.startsWith("~\\")) {
+            return Path.of(System.getProperty("user.home"), file.substring(1).replaceFirst("^[/\\\\]", ""));
+        }
+        return Path.of(file);
     }
 
     // --- Configuration ---
